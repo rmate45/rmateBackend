@@ -227,8 +227,11 @@ exports.calculateResultsLevel1 = async (req, res) => {
     
     const result = await calculateRetirementProjection(details.userRangeAnswers);
 
-    const questionKey = "Where do you currently live? Please enter your zip code";
-    const zipCode = details.userAnswers[questionKey];
+    const questionKey1 = "Where do you currently live? Please enter your zip code";
+    const questionKey2 = "Where do you currently live? Please be as specific as possible (Address, Zip Code, Neighborhood, City, or State)";
+
+    const zipCode = details.userAnswers[questionKey1] || details.userAnswers[questionKey2] || "";
+
     
     const getComfortMean = await calculateComfortMean(zipCode);
     const lifestyleDetails = await getLifestyleDetails(zipCode);
