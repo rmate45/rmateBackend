@@ -7,6 +7,7 @@ const financialAdvisorController = require('../../controllers/financial.controll
 //questionnaire
 router.get('/get-prime-questions',questionnarieController.getPrimeQuestions)
 router.post('/get-next-question',questionnarieController.getNextQuestion)
+router.post('/check-valid-zipcode',questionnarieController.checkZipCode)
 
 //mangage questionnaire
 router.post('/upload-file',manageQuestionnire.uploadFile)
