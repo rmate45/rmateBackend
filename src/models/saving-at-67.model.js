@@ -6,7 +6,7 @@ const lifestyleRangeSchema = new mongoose.Schema({
   mean: Number
 }, { _id: false });
 
-const stateLifestyleSchema = new mongoose.Schema({
+const savingAt67 = new mongoose.Schema({
   state: { type: String, required: true, unique: true },
 
   budget: lifestyleRangeSchema,
@@ -16,4 +16,4 @@ const stateLifestyleSchema = new mongoose.Schema({
   medianLifestyle: Number
 }, { timestamps: true });
 
-module.exports = mongoose.model('retirement-lifestyle-cost', stateLifestyleSchema);
+module.exports = mongoose.model('savings-at-67', savingAt67);

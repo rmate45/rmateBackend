@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const StateLifestyleByAgeSchema = new mongoose.Schema({
+const SavingByAgeModel = new mongoose.Schema({
   state: {
     type: String,
     required: true,
@@ -32,4 +32,4 @@ const StateLifestyleByAgeSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-module.exports = mongoose.model('state-lifestyle-by-age', StateLifestyleByAgeSchema);
+module.exports = mongoose.model('saving-by-age', SavingByAgeModel);

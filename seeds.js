@@ -1,12 +1,14 @@
 const mongoose = require('mongoose');
 const Question = require('./src/models/questions-prime.model');
 const QuestionsByAgeGroupModel = require('./src/models/questions-byAgeGroup.model');
+const envVariables = require("./src/config/env.config")
+const MONGODB_URI = envVariables.DB_URL
 
-const MONGODB_URI = 'mongodb://localhost:27017/Retiremate';
+console.log("db url --",MONGODB_URI)
+ 
 
 const lessThan40Data = [
     {
-        
         question_number: 1,
         questionText: "Are you retired?",
         type:"option",
@@ -961,7 +963,7 @@ const seedPrimeQuestion = async () => {
         await Question.create({
             quiz_no:1,
             questionText: 'How old are you?',
-            type:"option",
+            type:"range",
             options: [
                 { value: 'less_than_40', label: 'Less than 40', comment: 'Great! Starting early gives you the best chance to plan ahead.'},
                 { value: '40_49', label: '40-49', comment: 'You’re in your prime planning years—let’s make the most of it.' },

@@ -5,21 +5,31 @@ const FinancialReferenceModel = require('../models/financial-reference.model');
 
 const csv = require('csv-parser');
 const fs = require('fs');
-const ZipCodeLocation = require('../models/zipcode-locations.mode');
-const StateLifestyle = require('../models/retirement-lifestyle-cost.model');
+const ZipCodeLocation = require('../models/zipcode-locations.model');
+const savingAt67 = require('../models/saving-at-67.model');
 const SurveyRangeValue = require('../models/survey-range.model');
-const StateLifestyleByAge = require('../models/state-lifestyle-by-age.model')
+const SavingByAgeModel = require('../models/saving-by-age.model');
 
 const parseCurrency = (str) => {
   if (!str) return null;
   return parseFloat(str.toString().replace(/[$,]/g, '')) || null;
 };
 
-exports.uploadFinancialAdvisorData = async (filePath, fileNo) => {
+const getValueForCalculation = async (questionText, inputValue) => {
+  const range = await SurveyRangeValue.findOne({
+    questionText,
+    min: { $lte: inputValue },
+    max: { $gte: inputValue }
+  });
+
+  return range ? range.valueForCalculation : null;
+};
+
+exports.uploadFinancialAdvisorData = async (filePath) => {
   try {
     const workbook = XLSX.readFile(filePath);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(sheet);
+    const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
     const details = jsonData.map(row => ({
       primary_business_name: row['Primary Business Name'],
@@ -27,12 +37,10 @@ exports.uploadFinancialAdvisorData = async (filePath, fileNo) => {
       main_office_state: row['Main Office State'],
     }));
 
-    await FinancialAdvisor.deleteOne({ financial_Advisor_file_no: fileNo });
+    await FinancialAdvisor.deleteMany({});
 
-    await FinancialAdvisor.create({
-      financial_Advisor_file_no: fileNo,
-      details
-    });
+    await FinancialAdvisor.create({ details });
+
   } catch (error) {
     console.error('Error in upload financial advisors function:', error);
     throw new Error(error.message || 'Failed to upload financial advisor file details');
@@ -45,7 +53,6 @@ exports.getFinancialAdvisors = async (fileNumber, page = 1, limit = 3) => {
     const skip = (page - 1) * limit;
 
     const financialAdvisors = await FinancialAdvisor.aggregate([
-      { $match: { financial_Advisor_file_no: fileNumber } },
       { $unwind: "$details" },
       { $skip: skip },
       { $limit: limit },
@@ -77,7 +84,6 @@ exports.getFinancialAdvisors = async (fileNumber, page = 1, limit = 3) => {
 }
 
 
-
 exports.processFinancialReferenceExcel = async (rows) => {
   const dataToInsert = { document: 'financial_reference' };
 
@@ -93,16 +99,6 @@ exports.processFinancialReferenceExcel = async (rows) => {
   await FinancialReferenceModel.deleteMany({ document: 'financial_reference' });
 
   await FinancialReferenceModel.create(dataToInsert);
-};
-
-const getValueForCalculation = async (questionText, inputValue) => {
-  const range = await SurveyRangeValue.findOne({
-    questionText,
-    min: { $lte: inputValue },
-    max: { $gte: inputValue }
-  });
-
-  return range ? range.valueForCalculation : null;
 };
 
 
@@ -229,8 +225,8 @@ exports.processLifestyleExcelRows = async (rows) => {
   });
 
 
-  await StateLifestyle.deleteMany({});
-  return await StateLifestyle.insertMany(formattedData);
+  await savingAt67.deleteMany({});
+  return await savingAt67.insertMany(formattedData);
 };
 
 
@@ -245,7 +241,7 @@ exports.calculateComfortMean = async (zipcode) => {
       throw new Error(`Zip code ${zipcode} not found in database.`);
     }
 
-    const lifestyle = await StateLifestyle.findOne({ state: zipCodeDoc.state });
+    const lifestyle = await savingAt67.findOne({ state: zipCodeDoc.state });
     if (!lifestyle || !lifestyle.comfort || typeof lifestyle.comfort.mean !== 'number') {
       throw new Error(`Lifestyle data for state '${zipCodeDoc.state}' is incomplete or missing.`);
     }
@@ -270,7 +266,7 @@ exports.getLifestyleDetails = async (zipcode) => {
       throw new Error(`Zip code ${zipcode} not found in database.`);
     }
 
-    const lifestyle = await StateLifestyle.findOne({ state: zipCodeDoc.state });
+    const lifestyle = await savingAt67.findOne({ state: zipCodeDoc.state });
     if (!lifestyle) {
       throw new Error(`Lifestyle data for state '${zipCodeDoc.state}' not found.`);
     }
@@ -306,7 +302,7 @@ exports.processSurveyRangeExcel = async (file, uploadDir) => {
 };
 
 
-exports.uploadLifestyleByAge = async (fileBuffer) => {
+exports.uploadSavingByAge = async (fileBuffer) => {
   const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
   const sheetName = workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
@@ -322,12 +318,26 @@ exports.uploadLifestyleByAge = async (fileBuffer) => {
     medianLife: parseCurrency(row.MedianLife),
   }));
 
-  await StateLifestyleByAge.deleteMany(); 
-  return await StateLifestyleByAge.insertMany(parsedData);
+  await SavingByAgeModel.deleteMany(); 
+  return await SavingByAgeModel.insertMany(parsedData);
 };
 
 
+exports.getSavingByAgeDetails = async(age,zipcode)=>{
+  try {
+    const zipCodeDoc = await ZipCodeLocation.findOne({ zipCode: zipcode });
+    if (!zipCodeDoc) {
+      throw new Error(`Zip code ${zipcode} not found in database.`);
+    }
+  
+    const savingbyAgeData = await SavingByAgeModel.findOne({age:age,state:zipCodeDoc.state})
 
+    return savingbyAgeData
+
+ } catch (error) {
+    throw new Error(`Error in getLifestyleDetails: ${error.message}`);
+  }
+}
 
 
 
