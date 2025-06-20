@@ -19,6 +19,21 @@ const { errorResponse, successResponse } = require('../utils/responseHandler.uti
 const resMessages = require('../constants/resMessages.constants');
 
 
+exports.getFinancialAdvisors = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 3
+
+    const financialAdvisors = await getFinancialAdvisors(page, limit)
+
+    return res.status(200).json(successResponse('Details fetched successfully.', financialAdvisors))
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res.status(500).json(errorResponse(resMessages.generalError.somethingWentWrong, error.message));
+  }
+}
+
+
 exports.uploadFinancialAdvisorFile = async (req, res) => {
   try {
     const file = req.files?.file;
@@ -47,22 +62,6 @@ exports.uploadFinancialAdvisorFile = async (req, res) => {
     return res.status(500).json(errorResponse(resMessages.generalError.somethingWentWrong, error.message));
   }
 };
-
-
-exports.getFinancialAdvisors = async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 3
-
-    const financialAdvisors = await getFinancialAdvisors(page, limit)
-
-    return res.status(200).json(successResponse('Details fetched successfully.', financialAdvisors))
-  } catch (error) {
-    console.error("ERROR::", error);
-    return res.status(500).json(errorResponse(resMessages.generalError.somethingWentWrong, error.message));
-  }
-}
-
 
 exports.uploadFinancialReference = async (req, res) => {
   try {

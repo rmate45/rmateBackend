@@ -48,19 +48,16 @@ exports.uploadFinancialAdvisorData = async (filePath) => {
 };
 
 
-exports.getFinancialAdvisors = async (fileNumber, page = 1, limit = 3) => {
+exports.getFinancialAdvisors = async (page = 1, limit = 3) => {
   try {
-    const skip = (page - 1) * limit;
 
     const financialAdvisors = await FinancialAdvisor.aggregate([
       { $unwind: "$details" },
-      { $skip: skip },
-      { $limit: limit },
-      { $replaceRoot: { newRoot: "$details" } }
+      { $replaceRoot: { newRoot: "$details" } },  
+      { $sample: { size: limit } } 
     ]);
 
     const totalCountAgg = await FinancialAdvisor.aggregate([
-      { $match: { financial_Advisor_file_no: fileNumber } },
       { $project: { total: { $size: "$details" } } }
     ]);
 
