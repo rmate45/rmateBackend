@@ -4,6 +4,7 @@ const questionnarieController = require('../../controllers/questionnaireControll
 const manageQuestionnire = require("../../controllers/manageQuestionnaire.controller")
 const financialAdvisorController = require('../../controllers/financial.controller')
 const chatController = require('../../controllers/chatController')
+const userController = require('../../controllers/userController')
 const { body } = require('express-validator')
 
 //questionnaire
@@ -38,5 +39,11 @@ router.get('/get-statements', questionnarieController.getAllStatements);
 router.post('/upload-intake-questions', questionnarieController.uploadIntakeQuestions);
 router.get('/get-intake-questions', questionnarieController.getAllIntakeQuestions);
 router.get('/get-intake-question/:questionId', questionnarieController.getIntakeQuestion);
+
+router.post('/save', userController.saveResponse);
+router.get('/user/:phoneNumber', userController.getUser);
+router.get('/user/:phoneNumber/profile', userController.getUserProfile);
+router.get('/user/:phoneNumber/question/:questionId', userController.getResponse);
+router.get('/users', userController.getAllUsers);
 
 module.exports = router
