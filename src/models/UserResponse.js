@@ -15,6 +15,23 @@ const responseSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
+const retirementPlanSchema = new mongoose.Schema({
+  planId: {
+    type: String,
+    default: 'Plan1'
+  },
+  htmlContent: String,
+  generatedAt: {
+    type: Date,
+    default: Date.now
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'generated', 'failed'],
+    default: 'pending'
+  }
+}, { _id: false });
+
 const userResponseSchema = new mongoose.Schema({
   phoneNumber: {
     type: String,
@@ -22,28 +39,22 @@ const userResponseSchema = new mongoose.Schema({
     unique: true,
     index: true
   },
-  // Store all responses in a flexible array
   responses: [responseSchema],
-  // Automatically track completion based on required questions
-  completed: {
-    type: Boolean,
-    default: false
-  },
-  // Store metadata for easy querying without hardcoding
   metadata: {
     type: Map,
     of: mongoose.Schema.Types.Mixed
+  },
+  retirementPlans: [retirementPlanSchema],
+  completed: {
+    type: Boolean,
+    default: false
   }
 }, { 
   timestamps: true,
-  // Allow dynamic fields for future expansion
   strict: false
 });
 
-// Index for efficient querying
 userResponseSchema.index({ phoneNumber: 1 });
-userResponseSchema.index({ 'responses.questionId': 1 });
 userResponseSchema.index({ 'metadata.name': 1 });
-userResponseSchema.index({ 'metadata.zipCode': 1 });
 
-module.exports = mongoose.model('UserResponse', userResponseSchema); 
+module.exports = mongoose.model('UserResponse', userResponseSchema);
