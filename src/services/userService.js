@@ -86,7 +86,7 @@ const sendWelcomeMessage = async (phoneNumber, userName) => {
   try {
     const welcomeMessage = `Welcome to RetireMate, ${
       userName || "Valued Customer"
-    }! 🎉 Your personalized retirement plan is being created. We'll send you the link shortly.`;
+    }! Your personalized retirement plan is being created. We'll send you the link shortly.`;
 
     const result = await sendTwilioSms(welcomeMessage, phoneNumber);
     if (result.success) {
