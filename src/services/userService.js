@@ -70,12 +70,13 @@ const saveUserResponse = async (phoneNumber, responses) => {
 };
 
 const triggerPostCompletionProcesses = async (phoneNumber, metadata) => {
+  const obj = Object.fromEntries(metadata);
   try {
     // 1. Send welcome message via Twilio (non-blocking)
-    sendWelcomeMessage(phoneNumber, metadata.name);
+    sendWelcomeMessage(phoneNumber, obj.name);
 
     // 2. Generate retirement plan (non-blocking)
-    generateRetirementPlan(phoneNumber, metadata);
+    generateRetirementPlan(phoneNumber, obj);
   } catch (error) {
     console.error("Error in post-completion processes:", error);
   }
@@ -119,7 +120,7 @@ const generateRetirementPlan = async (phoneNumber, metadata) => {
 
     // Generate the AI prompt with candidate details
     const aiPrompt = buildRetirementPlanPrompt(metadata);
-
+    console.log("aiPrompt---", aiPrompt);
     // Generate plan via AI (non-blocking)
     generatePlanWithAI(phoneNumber, planId, aiPrompt);
   } catch (error) {
