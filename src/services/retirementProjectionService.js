@@ -27,16 +27,18 @@ const calculateRetirementProjection = async (userData) => {
 
     // Phase 1: Pre-Retirement (Current Age to Retirement Age)
     for (let age = currentAge; age <= RETIREMENT_AGE; age++) {
+      const growthAmount = currentSavings * PRE_RETIREMENT_GROWTH_RATE;
+
       const yearData = {
         age: age,
         savings: Math.round(currentSavings),
         contribution: Math.round(annualContribution),
         withdrawal: 0,
-        growth: Math.round(currentSavings * PRE_RETIREMENT_GROWTH_RATE),
+        growth: Math.round(growthAmount),
         phase: "pre_retirement",
       };
 
-      // Update savings for next year: (current savings + contribution) * growth
+      // Update savings for next year: (current savings + contribution) * (1 + growth rate)
       currentSavings =
         (currentSavings + annualContribution) *
         (1 + PRE_RETIREMENT_GROWTH_RATE);
@@ -48,27 +50,25 @@ const calculateRetirementProjection = async (userData) => {
     let yearsInRetirement = 0;
     const initialWithdrawal = parseFloat(householdIncome) * WITHDRAWAL_RATE;
 
-    while (currentSavings > 0 && yearsInRetirement < 33) {
+    while (currentSavings > 0 && yearsInRetirement < 50) {
       const currentAge = RETIREMENT_AGE + yearsInRetirement + 1;
 
       // Calculate inflation-adjusted withdrawal
       const withdrawalAmount =
         initialWithdrawal * Math.pow(1 + INFLATION_RATE, yearsInRetirement);
 
-      // Calculate growth on current savings BEFORE withdrawal
-      const growthAmount = currentSavings * POST_RETIREMENT_GROWTH_RATE;
-
       const yearData = {
         age: currentAge,
         savings: Math.round(currentSavings),
         contribution: 0,
         withdrawal: Math.round(withdrawalAmount),
-        growth: Math.round(growthAmount),
+        growth: Math.round(currentSavings * POST_RETIREMENT_GROWTH_RATE),
         phase: "post_retirement",
       };
 
-      // Update savings for next year: (current savings + growth - withdrawal)
-      currentSavings = currentSavings + growthAmount - withdrawalAmount;
+      // CORRECTED FORMULA: (current savings - withdrawal) * (1 + growth rate)
+      currentSavings =
+        (currentSavings - withdrawalAmount) * (1 + POST_RETIREMENT_GROWTH_RATE);
 
       // Check if savings are depleted
       if (currentSavings <= 0) {
@@ -82,13 +82,13 @@ const calculateRetirementProjection = async (userData) => {
     }
 
     // Prepare graph data for frontend
-    const graphData = prepareGraphData(projectionData);
+    const graphData = this.prepareGraphData(projectionData);
 
     return {
       success: true,
       data: projectionData,
       graphData: graphData,
-      summary: generateSummary(
+      summary: this.generateSummary(
         projectionData,
         currentAge,
         householdIncome,
