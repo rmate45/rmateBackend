@@ -9,7 +9,7 @@ exports.calculateProjection = async (req, res) => {
     const { age, householdIncome, retirementSavings } = req.body;
 
     // Validate required parameters
-    if (!age || !householdIncome || !retirementSavings) {
+    if (!age) {
       return res
         .status(400)
         .json(
@@ -31,15 +31,15 @@ exports.calculateProjection = async (req, res) => {
         .json(errorResponse("Age must be between 18 and 100"));
     }
 
-    if (householdIncome <= 0 || retirementSavings < 0) {
-      return res
-        .status(400)
-        .json(
-          errorResponse(
-            "Household income and retirement savings must be positive values"
-          )
-        );
-    }
+    // if (householdIncome <= 0 || retirementSavings < 0) {
+    //   return res
+    //     .status(400)
+    //     .json(
+    //       errorResponse(
+    //         "Household income and retirement savings must be positive values"
+    //       )
+    //     );
+    // }
 
     // Calculate projection
     const result = await projectionService.calculateRetirementProjection({
