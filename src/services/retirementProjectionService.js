@@ -48,7 +48,7 @@ const calculateRetirementProjection = async (userData) => {
     let yearsInRetirement = 0;
     const initialWithdrawal = parseFloat(householdIncome) * WITHDRAWAL_RATE;
 
-    while (currentSavings > 0 && yearsInRetirement < 50) {
+    while (currentSavings > 0 && yearsInRetirement < 33) {
       const currentAge = RETIREMENT_AGE + yearsInRetirement + 1;
 
       // Calculate inflation-adjusted withdrawal
