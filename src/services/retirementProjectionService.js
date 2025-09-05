@@ -82,13 +82,13 @@ const calculateRetirementProjection = async (userData) => {
     }
 
     // Prepare graph data for frontend
-    const graphData = this.prepareGraphData(projectionData);
+    const graphData = prepareGraphData(projectionData);
 
     return {
       success: true,
       data: projectionData,
       graphData: graphData,
-      summary: this.generateSummary(
+      summary: generateSummary(
         projectionData,
         currentAge,
         householdIncome,
