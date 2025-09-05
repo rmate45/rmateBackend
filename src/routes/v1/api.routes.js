@@ -5,6 +5,7 @@ const manageQuestionnire = require("../../controllers/manageQuestionnaire.contro
 const financialAdvisorController = require("../../controllers/financial.controller");
 const chatController = require("../../controllers/chatController");
 const userController = require("../../controllers/userController");
+const projectionController = require("../../controllers/retirementProjectionController");
 const { body } = require("express-validator");
 
 //questionnaire
@@ -76,5 +77,10 @@ router.get(
 );
 router.get("/users", userController.getAllUsers);
 router.get("/user/:phoneNumber/plan/:planId", userController.getRetirementPlan);
+
+router.post(
+  "/calculate-saving-projection",
+  projectionController.calculateProjection
+);
 
 module.exports = router;
