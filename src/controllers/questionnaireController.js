@@ -18,6 +18,7 @@ const path = require("path");
 const fs = require("fs");
 const XLSX = require("xlsx");
 const statementService = require("../services/questionnarie.service");
+const retirementQuestionService = require("../services/questionnarie.service");
 
 exports.getPrimeQuestions = async (req, res) => {
   try {
@@ -272,6 +273,146 @@ exports.getIntakeQuestion = async (req, res) => {
     return res
       .status(200)
       .json(successResponse("Question retrieved successfully", question));
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
+
+exports.uploadRetirementQuestions = async (req, res) => {
+  try {
+    if (!req.files || !req.files.file) {
+      return res.status(400).json(errorResponse("No file uploaded"));
+    }
+
+    const file = req.files.file;
+
+    // Check if file is Excel
+    if (!file.name.endsWith(".xlsx")) {
+      return res
+        .status(400)
+        .json(errorResponse("Only .xlsx files are allowed."));
+    }
+
+    // Save file temporarily
+    const uploadPath = require("path").join(__dirname, "../uploads", file.name);
+    await file.mv(uploadPath);
+
+    // Read Excel file
+    const XLSX = require("xlsx");
+    const workbook = XLSX.readFile(uploadPath);
+    const sheetName = workbook.SheetNames[0];
+    const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+      defval: "",
+    });
+
+    console.log(`Read ${data.length} rows from Excel file`);
+
+    // Log first few rows for debugging
+    console.log("First 3 rows sample:");
+    data.slice(0, 3).forEach((row, index) => {
+      console.log(`Row ${index + 1}:`, {
+        ageGroup: row["Age Group"],
+        prompt: row["Prompt"],
+        gender: row["Gender"],
+      });
+    });
+
+    // Process the data
+    const result =
+      await retirementQuestionService.processRetirementQuestionsExcel(data);
+
+    // Delete temporary file
+    const fs = require("fs");
+    fs.unlinkSync(uploadPath);
+
+    return res.status(200).json(
+      successResponse(result.message, {
+        count: result.count,
+      })
+    );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
+
+exports.getRetirementQuestions = async (req, res) => {
+  try {
+    const { ageGroup, gender, page, limit } = req.query;
+
+    const filters = {};
+
+    if (ageGroup) filters.ageGroup = ageGroup;
+    if (gender) filters.gender = gender;
+    if (page) filters.page = page;
+    if (limit) filters.limit = limit;
+
+    const result = await retirementQuestionService.getRetirementQuestions(
+      filters
+    );
+
+    return res
+      .status(200)
+      .json(
+        successResponse("Retirement questions fetched successfully", result)
+      );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
+
+exports.getAgeGroups = async (req, res) => {
+  try {
+    const ageGroups = await retirementQuestionService.getAgeGroups();
+
+    return res
+      .status(200)
+      .json(successResponse("Age groups fetched successfully", { ageGroups }));
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
+
+exports.getQuestionStats = async (req, res) => {
+  try {
+    const stats = await retirementQuestionService.getQuestionStats();
+
+    return res
+      .status(200)
+      .json(
+        successResponse("Question statistics fetched successfully", { stats })
+      );
   } catch (error) {
     console.error("ERROR::", error);
     return res

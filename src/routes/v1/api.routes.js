@@ -83,4 +83,21 @@ router.post(
   projectionController.calculateProjection
 );
 
+router.post(
+  "/upload-retirement-questions",
+  questionnarieController.uploadRetirementQuestions
+);
+
+// Get retirement questions with filters
+router.get(
+  "/retirement-questions",
+  questionnarieController.getRetirementQuestions
+);
+
+// Get available age groups
+router.get("/age-groups", questionnarieController.getAgeGroups);
+
+// Get question statistics
+router.get("/question-stats", questionnarieController.getQuestionStats);
+
 module.exports = router;

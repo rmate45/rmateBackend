@@ -2,6 +2,7 @@ const primeQuestionsModel = require("../models/questions-prime.model");
 const QuestionsByAgeGroupModel = require("../models/questions-byAgeGroup.model");
 const Statement = require("../models/Statement");
 const IntakeQuestionModel = require("../models/IntakeQuestion");
+const RetirementQuestionModel = require("../models/RetirementQuestionModel");
 
 const getPrimeQuestions = async () => {
   try {
@@ -196,6 +197,193 @@ const getIntakeQuestionById = async (questionId) => {
   }
 };
 
+// Normalize age group values
+const normalizeAgeGroup = (ageGroup) => {
+  if (!ageGroup) return ageGroup;
+
+  return ageGroup
+    .replace(/–/g, "-") // en dash to regular dash
+    .replace(/—/g, "-") // em dash to regular dash
+    .trim();
+};
+
+// Normalize gender values
+const normalizeGender = (gender) => {
+  if (!gender) return gender;
+
+  const normalized = gender.trim();
+  const genderLower = normalized.toLowerCase();
+
+  // Handle case variations
+  if (genderLower === "both") return "Both";
+  if (genderLower === "female") return "Female";
+  if (genderLower === "male") return "Male";
+
+  return normalized;
+};
+
+const processRetirementQuestionsExcel = async (data) => {
+  try {
+    const questionsMap = new Map();
+    let positionCounter = 1;
+
+    for (const [index, row] of data.entries()) {
+      // Skip empty rows or rows without essential data
+      if (!row["Age Group"] || !row["Prompt"] || !row["Gender"]) {
+        console.log(`Skipping row ${index + 1}: Missing required fields`);
+        continue;
+      }
+
+      // Normalize the data
+      const ageGroup = normalizeAgeGroup(row["Age Group"]);
+      const prompt = row["Prompt"].toString().trim();
+      const gender = normalizeGender(row["Gender"]);
+
+      // Validate age group
+      const validAgeGroups = [
+        "18-24",
+        "25-34",
+        "35-44",
+        "45-54",
+        "55-64",
+        "65-74",
+        "75-84",
+        "85+",
+      ];
+      if (!validAgeGroups.includes(ageGroup)) {
+        console.log(
+          `Skipping row ${index + 1}: Invalid age group "${ageGroup}"`
+        );
+        continue;
+      }
+
+      // Validate gender
+      const validGenders = ["Both", "Female", "Male"];
+      if (!validGenders.includes(gender)) {
+        console.log(`Skipping row ${index + 1}: Invalid gender "${gender}"`);
+        continue;
+      }
+
+      // Create a unique key for each question
+      const questionKey = `${ageGroup}-${prompt}-${gender}`;
+
+      if (!questionsMap.has(questionKey)) {
+        questionsMap.set(questionKey, {
+          ageGroup,
+          prompt,
+          gender,
+          position: positionCounter++,
+          inputType: "free_text", // Default input type
+          options: [],
+          defaultComment: "",
+        });
+      }
+    }
+
+    // Convert map to array
+    const questions = Array.from(questionsMap.values());
+
+    console.log(`Processed ${questions.length} unique questions`);
+
+    // Delete all existing retirement questions
+    await RetirementQuestionModel.deleteMany({});
+
+    // Insert new questions
+    if (questions.length > 0) {
+      await RetirementQuestionModel.insertMany(questions);
+    }
+
+    return {
+      success: true,
+      message: `Successfully processed ${questions.length} retirement questions`,
+      count: questions.length,
+    };
+  } catch (error) {
+    console.error("Error processing retirement questions Excel:", error);
+    throw error;
+  }
+};
+
+const getRetirementQuestions = async (filters = {}) => {
+  try {
+    const { ageGroup, gender, page = 1, limit = 50 } = filters;
+
+    const query = {};
+
+    // Apply filters if provided (normalize them first)
+    if (ageGroup) {
+      query.ageGroup = normalizeAgeGroup(ageGroup);
+    }
+
+    if (gender) {
+      query.gender = normalizeGender(gender);
+    }
+
+    const options = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      sort: { ageGroup: 1, position: 1 },
+    };
+
+    // Using pagination
+    const questions = await RetirementQuestionModel.find(query)
+      .sort(options.sort)
+      .skip((options.page - 1) * options.limit)
+      .limit(options.limit)
+      .lean();
+
+    const totalCount = await RetirementQuestionModel.countDocuments(query);
+
+    return {
+      questions,
+      pagination: {
+        currentPage: options.page,
+        totalPages: Math.ceil(totalCount / options.limit),
+        totalQuestions: totalCount,
+        hasNext: options.page < Math.ceil(totalCount / options.limit),
+        hasPrev: options.page > 1,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching retirement questions:", error);
+    throw error;
+  }
+};
+
+const getAgeGroups = async () => {
+  try {
+    const ageGroups = await RetirementQuestionModel.distinct("ageGroup");
+    return ageGroups.sort();
+  } catch (error) {
+    console.error("Error fetching age groups:", error);
+    throw error;
+  }
+};
+
+const getQuestionStats = async () => {
+  try {
+    const stats = await RetirementQuestionModel.aggregate([
+      {
+        $group: {
+          _id: {
+            ageGroup: "$ageGroup",
+            gender: "$gender",
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { "_id.ageGroup": 1, "_id.gender": 1 },
+      },
+    ]);
+
+    return stats;
+  } catch (error) {
+    console.error("Error fetching question stats:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   getPrimeQuestions,
   getNextQuestion,
@@ -204,4 +392,8 @@ module.exports = {
   processIntakeQuestionsExcel,
   getAllIntakeQuestions,
   getIntakeQuestionById,
+  processRetirementQuestionsExcel,
+  getRetirementQuestions,
+  getAgeGroups,
+  getQuestionStats,
 };
