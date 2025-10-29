@@ -425,3 +425,22 @@ exports.getQuestionStats = async (req, res) => {
       );
   }
 };
+
+exports.getAllPersonas = async (req, res) => {
+  try {
+    const personas = await retirementQuestionService.getAllPersonas();
+    return res
+      .status(200)
+      .json(successResponse("Personas retrieved successfully", personas));
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};

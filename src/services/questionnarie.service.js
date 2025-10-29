@@ -1,6 +1,7 @@
 const primeQuestionsModel = require("../models/questions-prime.model");
 const QuestionsByAgeGroupModel = require("../models/questions-byAgeGroup.model");
 const Statement = require("../models/Statement");
+const Persona = require("../models/Personas");
 const IntakeQuestionModel = require("../models/IntakeQuestion");
 const RetirementQuestionModel = require("../models/RetirementQuestionModel");
 
@@ -14,6 +15,15 @@ const getPrimeQuestions = async () => {
     return questions;
   } catch (error) {
     throw error.message;
+  }
+};
+
+const getAllPersonas = async () => {
+  try {
+    return await Persona.find().sort({ personaId: 1 });
+  } catch (error) {
+    console.error("Error fetching personas:", error);
+    throw error;
   }
 };
 
@@ -396,4 +406,5 @@ module.exports = {
   getRetirementQuestions,
   getAgeGroups,
   getQuestionStats,
+  getAllPersonas,
 };

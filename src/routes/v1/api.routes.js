@@ -55,6 +55,7 @@ router.post(
 
 router.post("/upload-statements", questionnarieController.uploadStatements);
 router.get("/get-statements", questionnarieController.getAllStatements);
+router.get("/get-personas", questionnarieController.getAllPersonas);
 router.post(
   "/upload-intake-questions",
   questionnarieController.uploadIntakeQuestions
