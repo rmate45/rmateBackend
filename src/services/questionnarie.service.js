@@ -2,6 +2,7 @@ const primeQuestionsModel = require("../models/questions-prime.model");
 const QuestionsByAgeGroupModel = require("../models/questions-byAgeGroup.model");
 const Statement = require("../models/Statement");
 const Persona = require("../models/Personas");
+const Article = require("../models/Article");
 const IntakeQuestionModel = require("../models/IntakeQuestion");
 const RetirementQuestionModel = require("../models/RetirementQuestionModel");
 
@@ -23,6 +24,53 @@ const getAllPersonas = async () => {
     return await Persona.find().sort({ personaId: 1 });
   } catch (error) {
     console.error("Error fetching personas:", error);
+    throw error;
+  }
+};
+
+const getPersonaById = async (id) => {
+  try {
+    return await Persona.findOne({
+      $or: [{ _id: id }, { personaId: id }],
+    });
+  } catch (error) {
+    console.error("Error fetching persona by ID:", error);
+    throw error;
+  }
+};
+
+const getAllArticles = async () => {
+  try {
+    return await Article.find({ isPublished: true }).sort({
+      publishedDate: -1,
+      createdAt: -1,
+    });
+  } catch (error) {
+    console.error("Error fetching articles:", error);
+    throw error;
+  }
+};
+
+const getArticleById = async (id) => {
+  try {
+    // Try to find by articleId first (if numeric)
+    if (!isNaN(id)) {
+      const articleByArticleId = await Article.findOne({
+        articleId: parseInt(id),
+        isPublished: true,
+      });
+      if (articleByArticleId) return articleByArticleId;
+    }
+
+    // If not found by articleId or id is not numeric, try by MongoDB _id
+    return await Article.findOne({
+      $or: [
+        { _id: id, isPublished: true },
+        { articleId: id, isPublished: true },
+      ],
+    });
+  } catch (error) {
+    console.error("Error fetching article by ID:", error);
     throw error;
   }
 };
@@ -407,4 +455,7 @@ module.exports = {
   getAgeGroups,
   getQuestionStats,
   getAllPersonas,
+  getPersonaById,
+  getAllArticles,
+  getArticleById,
 };

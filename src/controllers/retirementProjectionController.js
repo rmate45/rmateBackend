@@ -104,18 +104,38 @@ exports.calculateProjection = async (req, res) => {
         .json(errorResponse("Age must be between 18 and 100"));
     }
 
-    // Calculate projection
-    const result = await projectionService.calculateRetirementProjection({
+    const userData = {
       age: parseInt(age),
       householdIncome: parseFloat(householdIncome),
       retirementSavings: parseFloat(retirementSavings),
       otherSavings: parseFloat(otherSavings || 0),
-    });
+    };
+
+    // Calculate projection
+    const result = await projectionService.calculateRetirementProjection(
+      userData
+    );
+
+    // Calculate recommendations
+    const recommendations = await projectionService.calculateRecommendations(
+      result.data,
+      userData,
+      result.summary
+    );
+
+    // Add recommendations to the response
+    const enhancedResult = {
+      ...result,
+      recommendations: recommendations,
+    };
 
     return res
       .status(200)
       .json(
-        successResponse("Retirement projection calculated successfully", result)
+        successResponse(
+          "Retirement projection calculated successfully",
+          enhancedResult
+        )
       );
   } catch (error) {
     console.error("ERROR::", error);

@@ -444,3 +444,82 @@ exports.getAllPersonas = async (req, res) => {
       );
   }
 };
+
+exports.getPersonaById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json(errorResponse("Persona ID is required"));
+    }
+
+    const persona = await retirementQuestionService.getPersonaById(id);
+
+    if (!persona) {
+      return res.status(404).json(errorResponse("Persona not found"));
+    }
+
+    return res
+      .status(200)
+      .json(successResponse("Persona retrieved successfully", persona));
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
+
+exports.getAllArticles = async (req, res) => {
+  try {
+    const articles = await retirementQuestionService.getAllArticles();
+    return res
+      .status(200)
+      .json(successResponse("Articles retrieved successfully", articles));
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          "Something went wrong while fetching articles",
+          error.message
+        )
+      );
+  }
+};
+
+exports.getArticleById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json(errorResponse("Article ID is required"));
+    }
+
+    const article = await retirementQuestionService.getArticleById(id);
+
+    if (!article) {
+      return res.status(404).json(errorResponse("Article not found"));
+    }
+
+    return res
+      .status(200)
+      .json(successResponse("Article retrieved successfully", article));
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          "Something went wrong while fetching the article",
+          error.message
+        )
+      );
+  }
+};

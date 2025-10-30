@@ -616,6 +616,176 @@ const generateSummary = async (
   };
 };
 
+const calculateRecommendations = async (
+  projectionData,
+  userData,
+  originalScenario
+) => {
+  try {
+    const { age, householdIncome, retirementSavings, otherSavings } = userData;
+
+    // Calculate current monthly contribution
+    const current_contribution_per_month = (householdIncome * 0.1) / 12;
+
+    // Find Age_LAST - when savings become negative in post-retirement
+    const depletionData = projectionData.find(
+      (item) => item.savings <= 0 && item.phase === "post_retirement"
+    );
+    const Age_LAST = depletionData ? depletionData.age : null;
+
+    // Base recommendation object
+    const baseRecommendation = {
+      currentMonthlyContribution: Math.round(current_contribution_per_month),
+      savingsDepletionAge: Age_LAST || "Never",
+      scenario: null,
+      recommendations: [],
+      alternativeScenarios: [],
+    };
+
+    // Scenario 1: Savings Last Beyond Age 97
+    if (!Age_LAST || Age_LAST > 97) {
+      baseRecommendation.scenario = 1;
+      baseRecommendation.recommendations = [
+        `Your total savings are projected to last beyond age 97.`,
+        `Your current monthly contribution of $${Math.round(
+          current_contribution_per_month
+        )} per month appears on track for a comfortable retirement.`,
+      ];
+    }
+    // Scenario 2: Savings Last Between Ages 90 and 97
+    else if (Age_LAST >= 90 && Age_LAST <= 97) {
+      baseRecommendation.scenario = 2;
+      baseRecommendation.recommendations = [
+        `We project your total savings will last until approximately age ${
+          Age_LAST - 3
+        } to ${Age_LAST + 2}.`,
+        `Your current monthly contribution of $${Math.round(
+          current_contribution_per_month
+        )} per month is on track for retirement.`,
+      ];
+    }
+    // Scenario 3: Savings Run Out Before Age 90
+    else if (Age_LAST < 90) {
+      baseRecommendation.scenario = 3;
+
+      // Calculate alternative scenarios for increased contributions
+      const contributionScenarios = await calculateContributionScenarios(
+        userData,
+        Age_LAST
+      );
+      const growthScenarios = await calculateGrowthScenarios(
+        userData,
+        Age_LAST
+      );
+
+      baseRecommendation.recommendations = [
+        `Your total savings are projected to last until approximately age ${
+          Age_LAST - 3
+        } to ${Age_LAST + 2}.`,
+        `Current model assumes a 10% contribution from household income.`,
+        `Increasing contributions can significantly extend your savings horizon.`,
+        `You are currently saving $${Math.round(
+          current_contribution_per_month
+        )} per month.`,
+        `Our model recommends increasing this to 15% to 25% per month to stay on track.`,
+      ];
+
+      baseRecommendation.alternativeScenarios = {
+        increasedContributions: contributionScenarios,
+        alternativeGrowth: growthScenarios,
+      };
+    }
+
+    return baseRecommendation;
+  } catch (error) {
+    console.error("Error calculating recommendations:", error);
+    throw error;
+  }
+};
+
+const calculateContributionScenarios = async (userData, originalAgeLAST) => {
+  const scenarios = [];
+  const contributionRates = [0.15, 0.2, 0.25]; // 15%, 20%, 25%
+
+  for (const rate of contributionRates) {
+    // You'll need to run the projection calculation with the new contribution rate
+    // This requires modifying your existing projectionService to accept custom rates
+    const modifiedUserData = {
+      ...userData,
+      customContributionRate: rate,
+    };
+
+    // This would call a modified version of your projection service
+    // For now, I'll simulate the result - you'll need to implement the actual calculation
+    const projectedAgeLAST = await simulateProjectionWithModifiedContribution(
+      modifiedUserData
+    );
+
+    scenarios.push({
+      contributionRate: rate * 100,
+      monthlyContribution: Math.round((userData.householdIncome * rate) / 12),
+      projectedAgeRange: {
+        min: projectedAgeLAST - 3,
+        max: projectedAgeLAST + 2,
+      },
+      improvement: projectedAgeLAST - originalAgeLAST,
+    });
+  }
+
+  return scenarios;
+};
+
+const calculateGrowthScenarios = async (userData, originalAgeLAST) => {
+  const scenarios = [];
+  const growthRates = [0.075, 0.09]; // 7.5%, 9%
+  const riskLevels = ["medium-risk", "high-risk"];
+
+  for (let i = 0; i < growthRates.length; i++) {
+    const modifiedUserData = {
+      ...userData,
+      customGrowthRate: growthRates[i],
+    };
+
+    // This would call a modified version of your projection service
+    const projectedAgeLAST = await simulateProjectionWithModifiedGrowth(
+      modifiedUserData
+    );
+
+    scenarios.push({
+      growthRate: growthRates[i] * 100,
+      riskLevel: riskLevels[i],
+      projectedAgeRange: {
+        min: projectedAgeLAST - 3,
+        max: projectedAgeLAST + 2,
+      },
+      improvement: projectedAgeLAST - originalAgeLAST,
+    });
+  }
+
+  return scenarios;
+};
+
+// Placeholder functions - you'll need to implement these by modifying your projection service
+const simulateProjectionWithModifiedContribution = async (userData) => {
+  // This should call your projection service with modified contribution rate
+  // For now, return a simulated value
+  const baseAge =
+    userData.customContributionRate === 0.15
+      ? 85
+      : userData.customContributionRate === 0.2
+      ? 88
+      : 91;
+  return baseAge;
+};
+
+const simulateProjectionWithModifiedGrowth = async (userData) => {
+  // This should call your projection service with modified growth rate
+  // For now, return a simulated value
+  const baseAge = userData.customGrowthRate === 0.075 ? 87 : 90;
+  return baseAge;
+};
+
 module.exports = {
   calculateRetirementProjection,
+  calculateRecommendations,
 };
