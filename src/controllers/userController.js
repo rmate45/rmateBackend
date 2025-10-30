@@ -5,6 +5,8 @@ const {
   getUserDetails,
   getResponseByQuestionId,
   getUserProfile,
+  saveUserDemographic,
+  getUserDemographicById,
 } = require("../services/userService");
 const {
   successResponse,
@@ -173,5 +175,106 @@ exports.getRetirementPlan = async (req, res) => {
     return res
       .status(500)
       .json(errorResponse("Failed to retrieve retirement plan", error.message));
+  }
+};
+
+exports.saveUserDemographic = async (req, res) => {
+  try {
+    const { age, gender, income, savings, zipCode } = req.body;
+
+    // Validate required fields
+    if (
+      !age ||
+      !gender ||
+      income === undefined ||
+      savings === undefined ||
+      !zipCode
+    ) {
+      return res
+        .status(400)
+        .json(
+          errorResponse(
+            "Age, gender, income, savings, and ZIP code are required"
+          )
+        );
+    }
+
+    // Validate numeric fields
+    if (isNaN(age) || isNaN(income) || isNaN(savings)) {
+      return res
+        .status(400)
+        .json(errorResponse("Age, income, and savings must be valid numbers"));
+    }
+
+    if (age < 18 || age > 100) {
+      return res
+        .status(400)
+        .json(errorResponse("Age must be between 18 and 100"));
+    }
+
+    if (income < 0 || savings < 0) {
+      return res
+        .status(400)
+        .json(errorResponse("Income and savings cannot be negative"));
+    }
+
+    const userData = {
+      age: parseInt(age),
+      gender: gender.toLowerCase(),
+      income: parseFloat(income),
+      savings: parseFloat(savings),
+      zipCode: zipCode.toString(),
+    };
+
+    const savedData = await saveUserDemographic(userData);
+
+    return res
+      .status(201)
+      .json(
+        successResponse("User demographic data saved successfully", savedData)
+      );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse("Failed to save user demographic data", error.message)
+      );
+  }
+};
+
+exports.getUserDemographicById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res
+        .status(400)
+        .json(errorResponse("User demographic ID is required"));
+    }
+
+    const userData = await getUserDemographicById(id);
+
+    if (!userData) {
+      return res
+        .status(404)
+        .json(errorResponse("User demographic data not found"));
+    }
+
+    return res
+      .status(200)
+      .json(
+        successResponse(
+          "User demographic data retrieved successfully",
+          userData
+        )
+      );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse("Failed to retrieve user demographic data", error.message)
+      );
   }
 };

@@ -2,6 +2,7 @@ const UserResponseModel = require("../models/UserResponse");
 const { sendTwilioSms } = require("../utils/commonFunction.util");
 const config = require("../config/env.config");
 const chatService = require("../services/chatService");
+const UserDemographic = require("../models/UserDemographic");
 const { v4: uuidv4 } = require("uuid");
 
 // Configuration - can be moved to config file or database
@@ -315,6 +316,26 @@ const getAllUsers = async (filters = {}, page = 1, limit = 10) => {
   }
 };
 
+const saveUserDemographic = async (userData) => {
+  try {
+    const userDemographic = new UserDemographic(userData);
+    const savedData = await userDemographic.save();
+    return savedData;
+  } catch (error) {
+    console.error("Error saving user demographic data:", error);
+    throw error;
+  }
+};
+
+const getUserDemographicById = async (id) => {
+  try {
+    return await UserDemographic.findById(id);
+  } catch (error) {
+    console.error("Error fetching user demographic data by ID:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   saveUserResponse,
   getUserByPhone,
@@ -329,4 +350,6 @@ module.exports = {
   saveGeneratedPlan,
   sendPlanLinkSMS,
   updatePlanStatus,
+  saveUserDemographic,
+  getUserDemographicById,
 };

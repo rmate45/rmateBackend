@@ -82,6 +82,9 @@ router.get(
 router.get("/users", userController.getAllUsers);
 router.get("/user/:phoneNumber/plan/:planId", userController.getRetirementPlan);
 
+router.post("/save-demographic", userController.saveUserDemographic);
+router.get("/get-demographic/:id", userController.getUserDemographicById);
+
 router.post(
   "/calculate-saving-projection",
   projectionController.calculateProjection
