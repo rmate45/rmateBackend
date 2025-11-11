@@ -477,8 +477,10 @@ exports.getPersonaById = async (req, res) => {
 
 exports.getAllFinancialPlannings = async (req, res) => {
   try {
+    console.log("data---");
     const financialPlannings =
       await retirementQuestionService.getAllFinancialPlannings();
+    console.log("here---", financialPlannings);
     return res
       .status(200)
       .json(
