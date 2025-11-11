@@ -26,6 +26,7 @@ const exploreQuestionSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    collection: "ExploreQuestion",
   }
 );
 

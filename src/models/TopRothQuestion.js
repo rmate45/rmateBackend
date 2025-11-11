@@ -30,6 +30,7 @@ const topRothQuestionSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    collection: "TopRothQuestion",
   }
 );
 

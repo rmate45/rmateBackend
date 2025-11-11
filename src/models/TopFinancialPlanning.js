@@ -30,6 +30,7 @@ const topFinancialPlanningSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    collection: "TopFinancialPlanning",
   }
 );
 
