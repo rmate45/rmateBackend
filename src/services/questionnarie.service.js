@@ -18,9 +18,11 @@ const getAllExploreQuestions = async () => {
   }
 };
 
-const getExploreQuestionById = async (questionId) => {
+const getExploreQuestionById = async (id) => {
   try {
-    return await ExploreQuestion.findOne({ questionId });
+    return await ExploreQuestion.findOne({
+      $or: [{ _id: id }, { questionId: id }],
+    });
   } catch (error) {
     console.error("Error fetching explore question by ID:", error);
     throw error;
@@ -69,9 +71,11 @@ const getAllFinancialPlannings = async () => {
   }
 };
 
-const getFinancialPlanningById = async (planningId) => {
+const getFinancialPlanningById = async (id) => {
   try {
-    return await TopFinancialPlanning.findOne({ planningId });
+    return await TopFinancialPlanning.findOne({
+      $or: [{ _id: id }, { planningId: id }],
+    });
   } catch (error) {
     console.error("Error fetching financial planning by ID:", error);
     throw error;
@@ -87,9 +91,11 @@ const getAllRothQuestions = async () => {
   }
 };
 
-const getRothQuestionById = async (rothQuestionId) => {
+const getRothQuestionById = async (id) => {
   try {
-    return await TopRothQuestion.findOne({ rothQuestionId });
+    return await TopRothQuestion.findOne({
+      $or: [{ _id: id }, { rothQuestionId: id }],
+    });
   } catch (error) {
     console.error("Error fetching Roth question by ID:", error);
     throw error;
