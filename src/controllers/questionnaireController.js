@@ -475,6 +475,170 @@ exports.getPersonaById = async (req, res) => {
   }
 };
 
+exports.getAllFinancialPlannings = async (req, res) => {
+  try {
+    const financialPlannings =
+      await retirementQuestionService.getAllFinancialPlannings();
+    return res
+      .status(200)
+      .json(
+        successResponse(
+          "Financial plannings retrieved successfully",
+          financialPlannings
+        )
+      );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
+
+exports.getFinancialPlanningById = async (req, res) => {
+  try {
+    const { planningId } = req.params;
+    const financialPlanning =
+      await retirementQuestionService.getFinancialPlanningById(planningId);
+
+    if (!financialPlanning) {
+      return res
+        .status(404)
+        .json(errorResponse("Financial planning not found"));
+    }
+
+    return res
+      .status(200)
+      .json(
+        successResponse(
+          "Financial planning retrieved successfully",
+          financialPlanning
+        )
+      );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
+
+exports.getAllRothQuestions = async (req, res) => {
+  try {
+    const rothQuestions = await retirementQuestionService.getAllRothQuestions();
+    return res
+      .status(200)
+      .json(
+        successResponse("Roth questions retrieved successfully", rothQuestions)
+      );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
+
+exports.getRothQuestionById = async (req, res) => {
+  try {
+    const { rothQuestionId } = req.params;
+    const rothQuestion = await retirementQuestionService.getRothQuestionById(
+      rothQuestionId
+    );
+
+    if (!rothQuestion) {
+      return res.status(404).json(errorResponse("Roth question not found"));
+    }
+
+    return res
+      .status(200)
+      .json(
+        successResponse("Roth question retrieved successfully", rothQuestion)
+      );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
+
+exports.getAllExploreQuestions = async (req, res) => {
+  try {
+    const exploreQuestions =
+      await retirementQuestionService.getAllExploreQuestions();
+    return res
+      .status(200)
+      .json(
+        successResponse(
+          "Explore questions retrieved successfully",
+          exploreQuestions
+        )
+      );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
+
+exports.getExploreQuestionById = async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const exploreQuestion =
+      await retirementQuestionService.getExploreQuestionById(questionId);
+
+    if (!exploreQuestion) {
+      return res.status(404).json(errorResponse("Explore question not found"));
+    }
+
+    return res
+      .status(200)
+      .json(
+        successResponse(
+          "Explore question retrieved successfully",
+          exploreQuestion
+        )
+      );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
+
 exports.getAllArticles = async (req, res) => {
   try {
     const articles = await retirementQuestionService.getAllArticles();

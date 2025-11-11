@@ -5,6 +5,27 @@ const Persona = require("../models/Personas");
 const Article = require("../models/Article");
 const IntakeQuestionModel = require("../models/IntakeQuestion");
 const RetirementQuestionModel = require("../models/RetirementQuestionModel");
+const TopFinancialPlanning = require("../models/TopFinancialPlanning");
+const TopRothQuestion = require("../models/TopRothQuestion");
+const ExploreQuestion = require("../models/ExploreQuestion");
+
+const getAllExploreQuestions = async () => {
+  try {
+    return await ExploreQuestion.find().sort({ questionId: 1 });
+  } catch (error) {
+    console.error("Error fetching explore questions:", error);
+    throw error;
+  }
+};
+
+const getExploreQuestionById = async (questionId) => {
+  try {
+    return await ExploreQuestion.findOne({ questionId });
+  } catch (error) {
+    console.error("Error fetching explore question by ID:", error);
+    throw error;
+  }
+};
 
 const getPrimeQuestions = async () => {
   try {
@@ -35,6 +56,42 @@ const getPersonaById = async (id) => {
     });
   } catch (error) {
     console.error("Error fetching persona by ID:", error);
+    throw error;
+  }
+};
+
+const getAllFinancialPlannings = async () => {
+  try {
+    return await TopFinancialPlanning.find().sort({ planningId: 1 });
+  } catch (error) {
+    console.error("Error fetching financial plannings:", error);
+    throw error;
+  }
+};
+
+const getFinancialPlanningById = async (planningId) => {
+  try {
+    return await TopFinancialPlanning.findOne({ planningId });
+  } catch (error) {
+    console.error("Error fetching financial planning by ID:", error);
+    throw error;
+  }
+};
+
+const getAllRothQuestions = async () => {
+  try {
+    return await TopRothQuestion.find().sort({ rothQuestionId: 1 });
+  } catch (error) {
+    console.error("Error fetching Roth questions:", error);
+    throw error;
+  }
+};
+
+const getRothQuestionById = async (rothQuestionId) => {
+  try {
+    return await TopRothQuestion.findOne({ rothQuestionId });
+  } catch (error) {
+    console.error("Error fetching Roth question by ID:", error);
     throw error;
   }
 };
@@ -458,4 +515,10 @@ module.exports = {
   getPersonaById,
   getAllArticles,
   getArticleById,
+  getAllFinancialPlannings,
+  getFinancialPlanningById,
+  getAllRothQuestions,
+  getRothQuestionById,
+  getAllExploreQuestions,
+  getExploreQuestionById,
 };
