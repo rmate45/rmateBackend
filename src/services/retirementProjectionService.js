@@ -204,9 +204,9 @@ const calculateRetirementProjection = async (userData) => {
     const currentAge = parseInt(age);
 
     // Validate inputs
-    if (currentAge >= RETIREMENT_AGE) {
-      throw new Error("Current age must be less than retirement age (67)");
-    }
+    // if (currentAge >= RETIREMENT_AGE) {
+    //   throw new Error("Current age must be less than retirement age (67)");
+    // }
 
     if (currentAge < 18) {
       throw new Error("Current age must be at least 18");
