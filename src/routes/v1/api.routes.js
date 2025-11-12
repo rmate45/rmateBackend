@@ -82,6 +82,15 @@ router.get(
   questionnarieController.getRothQuestionById
 );
 
+router.get(
+  "/get-medicare-questions",
+  questionnarieController.getAllMedicareQuestions
+);
+router.get(
+  "/get-medicare-question/:medicareQuestionId",
+  questionnarieController.getMedicareQuestionById
+);
+
 router.get("/get-articles", questionnarieController.getAllArticles);
 router.get("/get-article/:id", questionnarieController.getArticleById);
 router.post(

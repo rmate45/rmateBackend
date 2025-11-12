@@ -639,6 +639,64 @@ exports.getExploreQuestionById = async (req, res) => {
   }
 };
 
+exports.getAllMedicareQuestions = async (req, res) => {
+  try {
+    const medicareQuestions =
+      await retirementQuestionService.getAllMedicareQuestions();
+    return res
+      .status(200)
+      .json(
+        successResponse(
+          "Medicare questions retrieved successfully",
+          medicareQuestions
+        )
+      );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
+
+exports.getMedicareQuestionById = async (req, res) => {
+  try {
+    const { medicareQuestionId } = req.params;
+    const medicareQuestion =
+      await retirementQuestionService.getMedicareQuestionById(
+        medicareQuestionId
+      );
+
+    if (!medicareQuestion) {
+      return res.status(404).json(errorResponse("Medicare question not found"));
+    }
+
+    return res
+      .status(200)
+      .json(
+        successResponse(
+          "Medicare question retrieved successfully",
+          medicareQuestion
+        )
+      );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
+
 exports.getAllArticles = async (req, res) => {
   try {
     const articles = await retirementQuestionService.getAllArticles();

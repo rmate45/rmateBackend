@@ -8,6 +8,27 @@ const RetirementQuestionModel = require("../models/RetirementQuestionModel");
 const TopFinancialPlanning = require("../models/TopFinancialPlanning");
 const TopRothQuestion = require("../models/TopRothQuestion");
 const ExploreQuestion = require("../models/ExploreQuestion");
+const TopMedicareQuestion = require("../models/TopMedicareQuestion");
+
+const getAllMedicareQuestions = async () => {
+  try {
+    return await TopMedicareQuestion.find().sort({ medicareQuestionId: 1 });
+  } catch (error) {
+    console.error("Error fetching Medicare questions:", error);
+    throw error;
+  }
+};
+
+const getMedicareQuestionById = async (id) => {
+  try {
+    return await TopMedicareQuestion.findOne({
+      $or: [{ _id: id }, { medicareQuestionId: id }],
+    });
+  } catch (error) {
+    console.error("Error fetching Medicare question by ID:", error);
+    throw error;
+  }
+};
 
 const getAllExploreQuestions = async () => {
   try {
@@ -527,4 +548,6 @@ module.exports = {
   getRothQuestionById,
   getAllExploreQuestions,
   getExploreQuestionById,
+  getAllMedicareQuestions,
+  getMedicareQuestionById,
 };
