@@ -203,16 +203,12 @@ const calculateRetirementProjection = async (userData) => {
     const projectionData = [];
     const currentAge = parseInt(age);
 
-    // Validate inputs
-    // if (currentAge >= RETIREMENT_AGE) {
-    //   throw new Error("Current age must be less than retirement age (67)");
-    // }
-
+    // Remove the age validation that prevents ages >= 67
     if (currentAge < 18) {
       throw new Error("Current age must be at least 18");
     }
 
-    // Calculate vectors
+    // Calculate vectors - UPDATED to handle currentAge >= 67
     const householdIncomeVector = calculateHouseholdIncomeVector(
       currentAge,
       householdIncome,
@@ -243,7 +239,7 @@ const calculateRetirementProjection = async (userData) => {
       CONTRIBUTION_RATE
     );
 
-    // Calculate savings projection with EXACT spreadsheet logic
+    // Calculate savings projection - UPDATED to handle currentAge >= 67
     const savingsProjection = calculateSavingsProjection(
       currentAge,
       retirementSavings + otherSavings, // Total savings
@@ -256,44 +252,55 @@ const calculateRetirementProjection = async (userData) => {
       LIFE_EXPECTANCY
     );
 
-    // Prepare projection data for response - CORRECTED VERSION
+    // Prepare projection data for response - UPDATED VERSION
     for (let i = 0; i <= LIFE_EXPECTANCY - currentAge; i++) {
       const currentYearAge = currentAge + i;
       const isPreRetirement = currentYearAge < RETIREMENT_AGE;
       const isRetirementAge = currentYearAge === RETIREMENT_AGE;
       const isPostRetirement = currentYearAge > RETIREMENT_AGE;
 
-      // Calculate indices for vectors
-      const preRetirementIndex = i;
-      const postRetirementIndex = currentYearAge - RETIREMENT_AGE;
+      // Calculate indices for vectors - UPDATED to handle edge cases
+      const preRetirementIndex = Math.min(i, householdIncomeVector.length - 1);
+      const postRetirementIndex = Math.max(0, currentYearAge - RETIREMENT_AGE);
 
-      // Determine what to display based on age - MATCHING SPREADSHEET
+      // Determine what to display based on age
       let displayHouseholdIncome = 0;
       let displaySocialSecurity = 0;
       let displayContribution = 0;
       let displayWithdrawal = 0;
       let displayFundingNeed = 0;
 
-      // Household income is shown for ALL ages in spreadsheet
+      // Household income logic - UPDATED
       if (isPreRetirement || isRetirementAge) {
-        displayHouseholdIncome = Math.round(
-          householdIncomeVector[preRetirementIndex] || 0
-        );
+        if (preRetirementIndex < householdIncomeVector.length) {
+          displayHouseholdIncome = Math.round(
+            householdIncomeVector[preRetirementIndex] || 0
+          );
+        }
       } else {
-        // For post-retirement, show hypothetical household income (for lifestyle needs calculation)
-        displayHouseholdIncome = Math.round(
-          hypotheticalIncomeVector[postRetirementIndex] || 0
-        );
+        // For post-retirement, show hypothetical household income
+        if (postRetirementIndex < hypotheticalIncomeVector.length) {
+          displayHouseholdIncome = Math.round(
+            hypotheticalIncomeVector[postRetirementIndex] || 0
+          );
+        }
       }
 
       // Contribution only for pre-retirement (age < 67)
-      displayContribution = isPreRetirement
-        ? Math.round(contributionVector[preRetirementIndex] || 0)
-        : 0;
+      if (isPreRetirement && preRetirementIndex < contributionVector.length) {
+        displayContribution = Math.round(
+          contributionVector[preRetirementIndex] || 0
+        );
+      } else {
+        displayContribution = 0;
+      }
 
-      // FIXED: Social Security, funding needs, and withdrawals from retirement age (67) onwards
-      // This includes age 67 itself!
-      if (isRetirementAge || isPostRetirement) {
+      // Social Security, funding needs, and withdrawals from retirement age (67) onwards
+      if (
+        (isRetirementAge || isPostRetirement) &&
+        postRetirementIndex < socialSecurityVector.length &&
+        postRetirementIndex < fundingNeedsVector.length
+      ) {
         displaySocialSecurity = Math.round(
           socialSecurityVector[postRetirementIndex] || 0
         );
@@ -308,7 +315,7 @@ const calculateRetirementProjection = async (userData) => {
         );
       }
 
-      // FIXED: Age 67 should be post_retirement phase
+      // Determine phase
       const phase =
         currentYearAge < RETIREMENT_AGE ? "pre_retirement" : "post_retirement";
 
@@ -355,6 +362,11 @@ const calculateHouseholdIncomeVector = (
   retirementAge
 ) => {
   const vector = [];
+
+  // If currentAge >= retirementAge, return empty array (no pre-retirement income)
+  if (currentAge >= retirementAge) {
+    return vector;
+  }
 
   for (let age = currentAge; age <= retirementAge; age++) {
     const yearsFromCurrent = age - currentAge;
@@ -426,6 +438,11 @@ const calculateContributionVector = (
   householdIncomeVector,
   contributionRate
 ) => {
+  // If householdIncomeVector is empty (currentAge >= 67), return empty array
+  if (householdIncomeVector.length === 0) {
+    return [];
+  }
+
   return householdIncomeVector.map((income) => income * contributionRate);
 };
 
@@ -447,61 +464,102 @@ const calculateSavingsProjection = (
 
   let currentSavings = initialSavings;
 
-  // Pre-retirement phase (current age to 66) - contributions + 6% growth
-  // Formula: =(G2+J2)*(1+$C$11)
-  for (let i = 0; i < retirementAge - currentAge - 1; i++) {
-    const contribution = contributionVector[i];
-    const yearGrowth = currentSavings * preRetirementGrowthRate;
+  // Handle case where currentAge >= retirementAge
+  if (currentAge >= retirementAge) {
+    // User is already retired - start with post-retirement logic
+    const yearsFromRetirement = currentAge - retirementAge;
+
+    // For current year (age >= 67), calculate withdrawal and growth
+    const currentFundingNeed = fundingNeedsVector[yearsFromRetirement] || 0;
+    const currentSocialSecurity =
+      socialSecurityVector[yearsFromRetirement] || 0;
+    const currentWithdrawal = Math.max(
+      0,
+      currentFundingNeed - currentSocialSecurity
+    );
+
+    const currentGrowth =
+      (currentSavings - currentWithdrawal) * postRetirementGrowthRate;
     currentSavings =
-      (currentSavings + contribution) * (1 + preRetirementGrowthRate);
+      (currentSavings - currentWithdrawal) * (1 + postRetirementGrowthRate);
 
     savings.push(currentSavings);
-    growth.push(yearGrowth);
+    growth.push(currentGrowth);
+    withdrawals.push(currentWithdrawal);
+
+    // Continue with remaining years
+    for (
+      let i = yearsFromRetirement + 1;
+      i <= lifeExpectancy - retirementAge;
+      i++
+    ) {
+      const fundingNeed = fundingNeedsVector[i] || 0;
+      const socialSecurity = socialSecurityVector[i] || 0;
+      const netWithdrawal = Math.max(0, fundingNeed - socialSecurity);
+
+      const yearGrowth =
+        (currentSavings - netWithdrawal) * postRetirementGrowthRate;
+      currentSavings =
+        (currentSavings - netWithdrawal) * (1 + postRetirementGrowthRate);
+
+      savings.push(currentSavings);
+      growth.push(yearGrowth);
+      withdrawals.push(netWithdrawal);
+    }
+  } else {
+    // Original logic for currentAge < retirementAge
+    // Pre-retirement phase (current age to 66) - contributions + 6% growth
+    for (let i = 0; i < retirementAge - currentAge - 1; i++) {
+      const contribution = contributionVector[i] || 0;
+      const yearGrowth = currentSavings * preRetirementGrowthRate;
+      currentSavings =
+        (currentSavings + contribution) * (1 + preRetirementGrowthRate);
+
+      savings.push(currentSavings);
+      growth.push(yearGrowth);
+      withdrawals.push(0);
+    }
+
+    // Age 66 (last pre-retirement year with contribution) - 6% growth
+    const age66Index = retirementAge - currentAge - 1;
+    const age66Contribution = contributionVector[age66Index] || 0;
+    const age66Growth = currentSavings * preRetirementGrowthRate;
+    currentSavings =
+      (currentSavings + age66Contribution) * (1 + preRetirementGrowthRate);
+
+    savings.push(currentSavings);
+    growth.push(age66Growth);
     withdrawals.push(0);
-  }
 
-  // Age 66 (last pre-retirement year with contribution) - 6% growth
-  const age66Index = retirementAge - currentAge - 1;
-  const age66Contribution = contributionVector[age66Index];
-  const age66Growth = currentSavings * preRetirementGrowthRate;
-  currentSavings =
-    (currentSavings + age66Contribution) * (1 + preRetirementGrowthRate);
+    // Age 67 - FIRST YEAR OF POST-RETIREMENT: 2.5% growth with withdrawal
+    const age67FundingNeed = fundingNeedsVector[0] || 0;
+    const age67SocialSecurity = socialSecurityVector[0] || 0;
+    const age67Withdrawal = Math.max(0, age67FundingNeed - age67SocialSecurity);
 
-  savings.push(currentSavings);
-  growth.push(age66Growth);
-  withdrawals.push(0);
-
-  // Age 67 - FIRST YEAR OF POST-RETIREMENT: 2.5% growth with withdrawal
-  const age67FundingNeed = fundingNeedsVector[0];
-  const age67SocialSecurity = socialSecurityVector[0];
-  const age67Withdrawal = Math.max(0, age67FundingNeed - age67SocialSecurity);
-
-  // FIXED: Age 67 should use POST-RETIREMENT growth (2.5%), not pre-retirement
-  const age67Growth =
-    (currentSavings - age67Withdrawal) * postRetirementGrowthRate;
-  currentSavings =
-    (currentSavings - age67Withdrawal) * (1 + postRetirementGrowthRate);
-
-  savings.push(currentSavings);
-  growth.push(age67Growth);
-  withdrawals.push(age67Withdrawal);
-
-  // Age 68 onwards - Use POST-RETIREMENT growth rate (2.5%) with withdrawals
-  // Formula: =(G24-H24)*(1+$C$15)
-  for (let i = 1; i <= lifeExpectancy - retirementAge; i++) {
-    const fundingNeed = fundingNeedsVector[i];
-    const socialSecurity = socialSecurityVector[i];
-    const netWithdrawal = Math.max(0, fundingNeed - socialSecurity);
-
-    // Apply CURRENT year's withdrawal with POST-RETIREMENT growth (2.5%)
-    const yearGrowth =
-      (currentSavings - netWithdrawal) * postRetirementGrowthRate;
+    const age67Growth =
+      (currentSavings - age67Withdrawal) * postRetirementGrowthRate;
     currentSavings =
-      (currentSavings - netWithdrawal) * (1 + postRetirementGrowthRate);
+      (currentSavings - age67Withdrawal) * (1 + postRetirementGrowthRate);
 
     savings.push(currentSavings);
-    growth.push(yearGrowth);
-    withdrawals.push(netWithdrawal);
+    growth.push(age67Growth);
+    withdrawals.push(age67Withdrawal);
+
+    // Age 68 onwards - Use POST-RETIREMENT growth rate (2.5%) with withdrawals
+    for (let i = 1; i <= lifeExpectancy - retirementAge; i++) {
+      const fundingNeed = fundingNeedsVector[i] || 0;
+      const socialSecurity = socialSecurityVector[i] || 0;
+      const netWithdrawal = Math.max(0, fundingNeed - socialSecurity);
+
+      const yearGrowth =
+        (currentSavings - netWithdrawal) * postRetirementGrowthRate;
+      currentSavings =
+        (currentSavings - netWithdrawal) * (1 + postRetirementGrowthRate);
+
+      savings.push(currentSavings);
+      growth.push(yearGrowth);
+      withdrawals.push(netWithdrawal);
+    }
   }
 
   return {
