@@ -106,6 +106,8 @@ router.get(
   questionnarieController.getIntakeQuestion
 );
 
+router.get("/get-medi-questions", questionnarieController.getMedicareQuestions);
+
 router.post("/save", userController.saveResponse);
 router.get("/user/:phoneNumber", userController.getUser);
 router.get("/user/:phoneNumber/profile", userController.getUserProfile);

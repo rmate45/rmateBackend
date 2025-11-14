@@ -19,6 +19,7 @@ const fs = require("fs");
 const XLSX = require("xlsx");
 const statementService = require("../services/questionnarie.service");
 const retirementQuestionService = require("../services/questionnarie.service");
+const IntakeQuestionModel = require("../models/MedicareQuestion");
 
 exports.getPrimeQuestions = async (req, res) => {
   try {
@@ -743,5 +744,34 @@ exports.getArticleById = async (req, res) => {
           error.message
         )
       );
+  }
+};
+
+exports.getMedicareQuestions = async (req, res) => {
+  try {
+    const questions = await getMedicareQuestions();
+    return res
+      .status(200)
+      .json(
+        successResponse("Medicare questions retrieved successfully", questions)
+      );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse("Failed to retrieve medicare questions", error.message)
+      );
+  }
+};
+
+const getMedicareQuestions = async () => {
+  try {
+    return await IntakeQuestionModel.find({
+      questionId: { $regex: "^MQ" },
+    }).sort({ position: 1 });
+  } catch (error) {
+    console.error("Error fetching medicare questions:", error);
+    throw error;
   }
 };
