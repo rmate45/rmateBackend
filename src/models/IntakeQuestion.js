@@ -6,7 +6,7 @@ const optionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    comment: Array,
+    comment: [String],
     actionTypeA: String,
     actionTypeB: String,
   },
