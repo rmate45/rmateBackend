@@ -190,13 +190,14 @@ const calculateRetirementProjection = async (userData) => {
   try {
     const { age, householdIncome, retirementSavings, otherSavings } = userData;
 
-    // Constants
-    const INFLATION_RATE = 0.02;
-    const CONTRIBUTION_RATE = 0.1;
-    const COMFORT_RATE = 0.7;
-    const PRE_RETIREMENT_GROWTH_RATE = 0.06;
-    const POST_RETIREMENT_GROWTH_RATE = 0.015;
-    const SOCIAL_SECURITY_GROWTH_RATE = 0.02;
+    // Constants - MATCHING SPREADSHEET VALUES
+    const INFLATION_RATE = 0.025; // C10
+    const CONTRIBUTION_RATE = 0.1; // C13
+    const COMFORT_RATE = 0.7; // C8
+    const PRE_RETIREMENT_GROWTH_RATE = 0.07; // C11
+    const POST_RETIREMENT_GROWTH_RATE = 0.02; // C15
+    const SOCIAL_SECURITY_GROWTH_RATE = 0.025; // C14
+    const LIFESTYLE_GROWTH_RATE = 0.025; // C9
     const RETIREMENT_AGE = 67;
     const LIFE_EXPECTANCY = 97;
 
@@ -207,40 +208,51 @@ const calculateRetirementProjection = async (userData) => {
       throw new Error("Current age must be at least 18");
     }
 
-    // For ages 67+, generate vectors differently
-    let householdIncomeVector,
-      hypotheticalIncomeVector,
-      socialSecurityVector,
-      fundingNeedsVector,
-      contributionVector;
+    // Calculate base Social Security using spreadsheet formula
+    const monthlyIncome = householdIncome / 12;
+    const ssBaseMonthly =
+      Math.min(monthlyIncome, 1174) * 0.9 +
+      Math.max(0, Math.min(monthlyIncome, 7078) - 1174) * 0.32 +
+      Math.max(0, monthlyIncome - 7078) * 0.15;
+    const baseSocialSecurity = ssBaseMonthly * 12;
+
+    // Calculate base Lifestyle Need
+    const baseLifestyleNeed = householdIncome * COMFORT_RATE;
+
+    let householdIncomeVector = [],
+      hypotheticalIncomeVector = [],
+      socialSecurityVector = [],
+      fundingNeedsVector = [],
+      contributionVector = [];
 
     if (currentAge >= RETIREMENT_AGE) {
-      // FOR AGES 67+: Generate vectors from 67 to 97 using HINC directly
-      householdIncomeVector = []; // No pre-retirement income
+      // FOR AGES 67+: Use spreadsheet logic
 
-      // Generate hypothetical income from 67 to 97 using HINC
-      hypotheticalIncomeVector = [];
+      // Generate Lifestyle Need from 67 to 97 (grows at LIFESTYLE_GROWTH_RATE)
+      fundingNeedsVector = [];
       for (let age = RETIREMENT_AGE; age <= LIFE_EXPECTANCY; age++) {
-        const yearsFromRetirement = age - RETIREMENT_AGE;
-        const hypotheticalIncome =
-          householdIncome * Math.pow(1 + INFLATION_RATE, yearsFromRetirement);
-        hypotheticalIncomeVector.push(hypotheticalIncome);
+        const yearsFrom67 = age - RETIREMENT_AGE;
+        const lifestyleNeed =
+          baseLifestyleNeed * Math.pow(1 + LIFESTYLE_GROWTH_RATE, yearsFrom67);
+        fundingNeedsVector.push(lifestyleNeed);
       }
 
-      // Generate Social Security from 67 to 97
-      socialSecurityVector = calculateSocialSecurityVectorFor67Plus(
-        householdIncome,
-        SOCIAL_SECURITY_GROWTH_RATE,
-        RETIREMENT_AGE,
-        LIFE_EXPECTANCY
-      );
+      // Generate Social Security from 67 to 97 (grows at SOCIAL_SECURITY_GROWTH_RATE)
+      socialSecurityVector = [];
+      for (let age = RETIREMENT_AGE; age <= LIFE_EXPECTANCY; age++) {
+        const yearsFrom67 = age - RETIREMENT_AGE;
+        const socialSecurity =
+          baseSocialSecurity *
+          Math.pow(1 + SOCIAL_SECURITY_GROWTH_RATE, yearsFrom67);
+        socialSecurityVector.push(socialSecurity);
+      }
 
-      fundingNeedsVector = hypotheticalIncomeVector.map(
-        (income) => income * COMFORT_RATE
-      );
-      contributionVector = []; // No contributions after retirement
+      // No pre-retirement vectors needed for 67+
+      householdIncomeVector = [];
+      hypotheticalIncomeVector = [];
+      contributionVector = [];
     } else {
-      // FOR AGES < 67: Use existing logic
+      // FOR AGES < 67: USE EXISTING LOGIC (NO CHANGES)
       householdIncomeVector = calculateHouseholdIncomeVector(
         currentAge,
         householdIncome,
@@ -254,12 +266,14 @@ const calculateRetirementProjection = async (userData) => {
         LIFE_EXPECTANCY
       );
 
-      socialSecurityVector = calculateSocialSecurityVector(
-        currentAge,
-        householdIncome,
-        SOCIAL_SECURITY_GROWTH_RATE,
-        LIFE_EXPECTANCY
-      );
+      socialSecurityVector = [];
+      for (let age = RETIREMENT_AGE; age <= LIFE_EXPECTANCY; age++) {
+        const yearsFrom67 = age - RETIREMENT_AGE;
+        const socialSecurity =
+          baseSocialSecurity *
+          Math.pow(1 + SOCIAL_SECURITY_GROWTH_RATE, yearsFrom67);
+        socialSecurityVector.push(socialSecurity);
+      }
 
       fundingNeedsVector = calculateFundingNeedsVector(
         hypotheticalIncomeVector,
@@ -301,46 +315,67 @@ const calculateRetirementProjection = async (userData) => {
       let displayWithdrawal = 0;
       let displayFundingNeed = 0;
 
-      // Household income logic
-      if (isPreRetirement || isRetirementAge) {
-        if (preRetirementIndex < householdIncomeVector.length) {
-          displayHouseholdIncome = Math.round(
-            householdIncomeVector[preRetirementIndex] || 0
+      if (currentAge >= RETIREMENT_AGE) {
+        // FOR 67+: Use spreadsheet-based values
+        if (postRetirementIndex < socialSecurityVector.length) {
+          displaySocialSecurity = Math.round(
+            socialSecurityVector[postRetirementIndex] || 0
           );
         }
-      } else {
-        if (postRetirementIndex < hypotheticalIncomeVector.length) {
-          displayHouseholdIncome = Math.round(
-            hypotheticalIncomeVector[postRetirementIndex] || 0
+        if (postRetirementIndex < fundingNeedsVector.length) {
+          displayFundingNeed = Math.round(
+            fundingNeedsVector[postRetirementIndex] || 0
           );
         }
-      }
-
-      // Contribution only for pre-retirement (age < 67)
-      if (isPreRetirement && preRetirementIndex < contributionVector.length) {
-        displayContribution = Math.round(
-          contributionVector[preRetirementIndex] || 0
-        );
-      } else {
-        displayContribution = 0;
-      }
-
-      // Social Security, funding needs, and withdrawals from retirement age (67) onwards
-      if (
-        (isRetirementAge || isPostRetirement) &&
-        postRetirementIndex < socialSecurityVector.length &&
-        postRetirementIndex < fundingNeedsVector.length
-      ) {
-        displaySocialSecurity = Math.round(
-          socialSecurityVector[postRetirementIndex] || 0
-        );
-        displayFundingNeed = Math.round(
-          fundingNeedsVector[postRetirementIndex] || 0
-        );
         displayWithdrawal = Math.max(
           0,
-          Math.round(displayFundingNeed - displaySocialSecurity)
+          displayFundingNeed - displaySocialSecurity
         );
+
+        // For 67+, household income is the hypothetical income (Lifestyle Need / Comfort Rate)
+        if (postRetirementIndex < fundingNeedsVector.length) {
+          displayHouseholdIncome = Math.round(
+            fundingNeedsVector[postRetirementIndex] / COMFORT_RATE
+          );
+        }
+      } else {
+        // FOR <67: Use existing logic
+        if (isPreRetirement || isRetirementAge) {
+          if (preRetirementIndex < householdIncomeVector.length) {
+            displayHouseholdIncome = Math.round(
+              householdIncomeVector[preRetirementIndex] || 0
+            );
+          }
+        } else {
+          if (postRetirementIndex < hypotheticalIncomeVector.length) {
+            displayHouseholdIncome = Math.round(
+              hypotheticalIncomeVector[postRetirementIndex] || 0
+            );
+          }
+        }
+
+        if (isPreRetirement && preRetirementIndex < contributionVector.length) {
+          displayContribution = Math.round(
+            contributionVector[preRetirementIndex] || 0
+          );
+        }
+
+        if (
+          (isRetirementAge || isPostRetirement) &&
+          postRetirementIndex < socialSecurityVector.length &&
+          postRetirementIndex < fundingNeedsVector.length
+        ) {
+          displaySocialSecurity = Math.round(
+            socialSecurityVector[postRetirementIndex] || 0
+          );
+          displayFundingNeed = Math.round(
+            fundingNeedsVector[postRetirementIndex] || 0
+          );
+          displayWithdrawal = Math.max(
+            0,
+            Math.round(displayFundingNeed - displaySocialSecurity)
+          );
+        }
       }
 
       const phase =
@@ -361,7 +396,10 @@ const calculateRetirementProjection = async (userData) => {
       projectionData.push(yearData);
     }
 
-    const graphData = prepareGraphData(projectionData);
+    const graphData = prepareGraphData(
+      projectionData,
+      currentAge >= RETIREMENT_AGE
+    );
 
     return {
       success: true,
@@ -504,32 +542,19 @@ const calculateSavingsProjection = (
   let currentSavings = initialSavings;
 
   if (currentAge >= retirementAge) {
-    // USER IS 67+: Start drawdown immediately from current age
-    const startIndex = currentAge - retirementAge; // Starting position in the vectors
+    // USER IS 67+: Use exact spreadsheet logic
+    const startIndex = currentAge - retirementAge;
 
-    console.log(
-      `Starting at age ${currentAge}, index ${startIndex} in vectors`
-    );
-    console.log(`Funding needs available: ${fundingNeedsVector.length} years`);
-    console.log(
-      `Social security available: ${socialSecurityVector.length} years`
-    );
-
-    // Process each year from current age to life expectancy
-    for (let i = startIndex; i < fundingNeedsVector.length; i++) {
-      const fundingNeed = fundingNeedsVector[i] || 0;
-      const socialSecurity = socialSecurityVector[i] || 0;
+    // First year (current age)
+    if (startIndex < fundingNeedsVector.length) {
+      const fundingNeed = fundingNeedsVector[startIndex] || 0;
+      const socialSecurity = socialSecurityVector[startIndex] || 0;
       const netWithdrawal = Math.max(0, fundingNeed - socialSecurity);
 
-      console.log(
-        `Age ${
-          currentAge + (i - startIndex)
-        }: Funding=${fundingNeed}, SS=${socialSecurity}, Withdrawal=${netWithdrawal}, Savings=${currentSavings}`
-      );
+      // Calculate growth for first year
+      const yearGrowth = currentSavings * postRetirementGrowthRate;
 
-      // CORRECT FORMULA: Savings[o+1] = (Savings[o] - NetWithdrawal[o]) * (1 + ROI)
-      const yearGrowth =
-        (currentSavings - netWithdrawal) * postRetirementGrowthRate;
+      // Apply spreadsheet formula: F[next] = (F[current] - G[current]) * (1 + C15)
       currentSavings =
         (currentSavings - netWithdrawal) * (1 + postRetirementGrowthRate);
 
@@ -538,12 +563,28 @@ const calculateSavingsProjection = (
       withdrawals.push(netWithdrawal);
     }
 
-    // Remove the initial element since we've processed all years
+    // Subsequent years
+    for (let i = startIndex + 1; i < fundingNeedsVector.length; i++) {
+      const fundingNeed = fundingNeedsVector[i] || 0;
+      const socialSecurity = socialSecurityVector[i] || 0;
+      const netWithdrawal = Math.max(0, fundingNeed - socialSecurity);
+
+      // SPREADSHEET FORMULA: F[next] = F[current] * (1 + C15) - G[next]
+      const yearGrowth = currentSavings * postRetirementGrowthRate;
+      currentSavings =
+        currentSavings * (1 + postRetirementGrowthRate) - netWithdrawal;
+
+      savings.push(currentSavings);
+      growth.push(yearGrowth);
+      withdrawals.push(netWithdrawal);
+    }
+
+    // Remove initial element
     savings.shift();
     growth.shift();
     withdrawals.shift();
   } else {
-    // EXISTING LOGIC FOR AGES < 67 - NO CHANGES
+    // FOR AGES < 67: USE EXISTING LOGIC (NO CHANGES)
     // Pre-retirement phase (current age to 66)
     for (let i = 0; i < retirementAge - currentAge - 1; i++) {
       const contribution = contributionVector[i] || 0;
@@ -569,8 +610,7 @@ const calculateSavingsProjection = (
     const age67FundingNeed = fundingNeedsVector[0] || 0;
     const age67SocialSecurity = socialSecurityVector[0] || 0;
     const age67Withdrawal = Math.max(0, age67FundingNeed - age67SocialSecurity);
-    const age67Growth =
-      (currentSavings - age67Withdrawal) * postRetirementGrowthRate;
+    const age67Growth = currentSavings * postRetirementGrowthRate;
     currentSavings =
       (currentSavings - age67Withdrawal) * (1 + postRetirementGrowthRate);
     savings.push(currentSavings);
@@ -582,8 +622,7 @@ const calculateSavingsProjection = (
       const fundingNeed = fundingNeedsVector[i] || 0;
       const socialSecurity = socialSecurityVector[i] || 0;
       const netWithdrawal = Math.max(0, fundingNeed - socialSecurity);
-      const yearGrowth =
-        (currentSavings - netWithdrawal) * postRetirementGrowthRate;
+      const yearGrowth = currentSavings * postRetirementGrowthRate;
       currentSavings =
         (currentSavings - netWithdrawal) * (1 + postRetirementGrowthRate);
       savings.push(currentSavings);
@@ -599,69 +638,108 @@ const calculateSavingsProjection = (
   };
 };
 
-const prepareGraphData = async (projectionData) => {
+const prepareGraphData = async (projectionData, is67Plus = false) => {
   const labels = [];
   const savingsData = [];
-  const contributionData = [];
   const withdrawalData = [];
-  const incomeData = [];
   const socialSecurityData = [];
 
   projectionData.forEach((year) => {
     labels.push(`Age ${year.age}`);
     savingsData.push(year.savings);
-    contributionData.push(year.contribution);
     withdrawalData.push(year.withdrawal);
-    incomeData.push(year.householdIncome);
     socialSecurityData.push(year.socialSecurity);
   });
 
-  return {
-    labels: labels,
-    datasets: [
-      {
-        label: "Retirement Savings ($)",
-        data: savingsData,
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
-        borderColor: "rgba(54, 162, 235, 1)",
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-      },
-      {
-        label: "Annual Contributions ($)",
-        data: contributionData,
-        backgroundColor: "rgba(75, 192, 192, 0.2)",
-        borderColor: "rgba(75, 192, 192, 1)",
-        borderWidth: 2,
-        fill: false,
-      },
-      {
-        label: "Annual Withdrawals ($)",
-        data: withdrawalData,
-        backgroundColor: "rgba(255, 99, 132, 0.2)",
-        borderColor: "rgba(255, 99, 132, 1)",
-        borderWidth: 2,
-        fill: false,
-      },
-      {
-        label: "Household Income ($)",
-        data: incomeData,
-        backgroundColor: "rgba(153, 102, 255, 0.2)",
-        borderColor: "rgba(153, 102, 255, 1)",
-        borderWidth: 2,
-        fill: false,
-      },
-      {
-        label: "Social Security ($)",
-        data: socialSecurityData,
-        backgroundColor: "rgba(255, 159, 64, 0.2)",
-        borderColor: "rgba(255, 159, 64, 1)",
-        borderWidth: 2,
-        fill: false,
-      },
-    ],
-  };
+  if (is67Plus) {
+    // For 67+: Show only Savings, Withdrawal, Social Security
+    return {
+      labels: labels,
+      datasets: [
+        {
+          label: "Retirement Savings ($)",
+          data: savingsData,
+          backgroundColor: "rgba(54, 162, 235, 0.2)",
+          borderColor: "rgba(54, 162, 235, 1)",
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+        },
+        {
+          label: "Annual Withdrawals ($)",
+          data: withdrawalData,
+          backgroundColor: "rgba(255, 99, 132, 0.2)",
+          borderColor: "rgba(255, 99, 132, 1)",
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: "Social Security ($)",
+          data: socialSecurityData,
+          backgroundColor: "rgba(255, 159, 64, 0.2)",
+          borderColor: "rgba(255, 159, 64, 1)",
+          borderWidth: 2,
+          fill: false,
+        },
+      ],
+    };
+  } else {
+    // For <67: Show all data (existing behavior)
+    const contributionData = [];
+    const incomeData = [];
+
+    projectionData.forEach((year) => {
+      contributionData.push(year.contribution);
+      incomeData.push(year.householdIncome);
+    });
+
+    return {
+      labels: labels,
+      datasets: [
+        {
+          label: "Retirement Savings ($)",
+          data: savingsData,
+          backgroundColor: "rgba(54, 162, 235, 0.2)",
+          borderColor: "rgba(54, 162, 235, 1)",
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+        },
+        {
+          label: "Annual Contributions ($)",
+          data: contributionData,
+          backgroundColor: "rgba(75, 192, 192, 0.2)",
+          borderColor: "rgba(75, 192, 192, 1)",
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: "Annual Withdrawals ($)",
+          data: withdrawalData,
+          backgroundColor: "rgba(255, 99, 132, 0.2)",
+          borderColor: "rgba(255, 99, 132, 1)",
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: "Household Income ($)",
+          data: incomeData,
+          backgroundColor: "rgba(153, 102, 255, 0.2)",
+          borderColor: "rgba(153, 102, 255, 1)",
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: "Social Security ($)",
+          data: socialSecurityData,
+          backgroundColor: "rgba(255, 159, 64, 0.2)",
+          borderColor: "rgba(255, 159, 64, 1)",
+          borderWidth: 2,
+          fill: false,
+        },
+      ],
+    };
+  }
 };
 
 const generateSummary = async (
