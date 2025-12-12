@@ -9,6 +9,16 @@ const TopFinancialPlanning = require("../models/TopFinancialPlanning");
 const TopRothQuestion = require("../models/TopRothQuestion");
 const ExploreQuestion = require("../models/ExploreQuestion");
 const TopMedicareQuestion = require("../models/TopMedicareQuestion");
+const AskedQuestion = require("../models/question-asked.model");
+
+const getAllAskedQuestions = async () => {
+  try {
+    return await AskedQuestion.find().sort({ retirementQuestionId: 1 });
+  } catch (error) {
+    console.error("Error fetching Asked questions:", error);
+    throw error;
+  }
+};
 
 const getAllMedicareQuestions = async () => {
   try {
@@ -550,4 +560,5 @@ module.exports = {
   getExploreQuestionById,
   getAllMedicareQuestions,
   getMedicareQuestionById,
+  getAllAskedQuestions,
 };

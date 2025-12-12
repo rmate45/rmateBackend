@@ -91,6 +91,11 @@ router.get(
   questionnarieController.getMedicareQuestionById
 );
 
+router.get(
+  "/get-asked-questions",
+  questionnarieController.getAllAskedQuestions
+);
+
 router.get("/get-articles", questionnarieController.getAllArticles);
 router.get("/get-article/:id", questionnarieController.getArticleById);
 router.post(

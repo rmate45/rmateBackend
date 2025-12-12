@@ -775,3 +775,28 @@ const getMedicareQuestions = async () => {
     throw error;
   }
 };
+
+exports.getAllAskedQuestions = async (req, res) => {
+  try {
+    const retirementQuestions =
+      await retirementQuestionService.getAllAskedQuestions();
+    return res
+      .status(200)
+      .json(
+        successResponse(
+          "Asked questions retrieved successfully",
+          retirementQuestions
+        )
+      );
+  } catch (error) {
+    console.error("ERROR::", error);
+    return res
+      .status(500)
+      .json(
+        errorResponse(
+          resMessages.generalError.somethingWentWrong,
+          error.message
+        )
+      );
+  }
+};
