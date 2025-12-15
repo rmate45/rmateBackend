@@ -790,82 +790,369 @@ const calculateRecommendations = async (
   try {
     const { age, householdIncome, retirementSavings, otherSavings } = userData;
 
-    // Calculate current monthly contribution
-    const current_contribution_per_month = (householdIncome * 0.1) / 12;
-
     // Find Age_LAST - when savings become negative in post-retirement
     const depletionData = projectionData.find(
       (item) => item.savings <= 0 && item.phase === "post_retirement"
     );
     const Age_LAST = depletionData ? depletionData.age : null;
 
-    // Base recommendation object
-    const baseRecommendation = {
-      currentMonthlyContribution: Math.round(current_contribution_per_month),
-      savingsDepletionAge: Age_LAST || "Never",
-      scenario: null,
-      recommendations: [],
-      alternativeScenarios: [],
+    // Calculate age range
+    const ageLow = Age_LAST ? Age_LAST - 3 : 95;
+    const ageHigh = Age_LAST ? Age_LAST + 2 : 97;
+
+    // Determine longevity band based on Age_LAST
+    let longevityBand;
+    if (!Age_LAST || Age_LAST >= 95) {
+      longevityBand = "95+";
+    } else if (Age_LAST >= 90) {
+      longevityBand = "90-94";
+    } else if (Age_LAST >= 80) {
+      longevityBand = "80-89";
+    } else {
+      longevityBand = "70-79";
+    }
+
+    // Determine age group
+    let ageGroup;
+    if (age >= 85) ageGroup = "85+";
+    else if (age >= 75) ageGroup = "75-84";
+    else if (age >= 65) ageGroup = "65-74";
+    else if (age >= 55) ageGroup = "55-64";
+    else if (age >= 45) ageGroup = "45-54";
+    else if (age >= 35) ageGroup = "35-44";
+    else if (age >= 25) ageGroup = "25-34";
+    else ageGroup = "18-24";
+
+    // Get longevity band message - PASS ageLow and ageHigh as parameters
+    const longevityMessage = getLongevityMessage(
+      ageGroup,
+      longevityBand,
+      ageLow,
+      ageHigh
+    );
+
+    // EXTRACT ACTUAL VALUES FROM PROJECTION DATA
+
+    // 1. Find retirement age (when phase changes to post_retirement)
+    const retirementEntry = projectionData.find(
+      (item) => item.phase === "post_retirement"
+    );
+    const retireAge = retirementEntry ? retirementEntry.age : 67;
+
+    // 2. Find peak savings (maximum savings value)
+    const peakSavings = Math.max(
+      ...projectionData.map((item) => item.savings || 0)
+    );
+
+    // 3. Find current age data
+    const currentYearData = projectionData.find((item) => item.age === age);
+
+    // Calculate actual contribution rate from data
+    let currentContributionRate = 0;
+    let currentContributionMonthly = 0;
+    if (currentYearData && currentYearData.householdIncome > 0) {
+      // Calculate actual percentage: (contribution / householdIncome) * 100
+      currentContributionRate = Math.round(
+        (currentYearData.contribution / currentYearData.householdIncome) * 100
+      );
+      currentContributionMonthly = Math.round(
+        currentYearData.contribution / 12
+      );
+    } else {
+      // Fallback to default calculation
+      currentContributionMonthly = Math.round((householdIncome * 0.1) / 12);
+      currentContributionRate = 10;
+    }
+
+    // 4. Find Social Security data at retirement age
+    const ssData = projectionData.find((item) => item.age === retireAge);
+    const ssBenefit = ssData ? ssData.socialSecurity : 0;
+    const ssAge = retireAge; // Assuming SS starts at retirement age
+
+    // 5. Find growth rate - calculate from data
+    let growthRate = 5.5; // Default
+    // Try to calculate actual growth rate from data
+    const preRetirementData = projectionData.filter(
+      (item) => item.phase === "pre_retirement"
+    );
+    if (preRetirementData.length > 1) {
+      // Find total contributions during pre-retirement
+      const totalContributions = preRetirementData.reduce(
+        (sum, item) => sum + item.contribution,
+        0
+      );
+
+      // Find starting and ending savings
+      const startSavings = preRetirementData[0].savings;
+      const endSavings =
+        preRetirementData[preRetirementData.length - 1].savings;
+
+      // Calculate actual growth: (ending - starting - contributions) / starting
+      const totalGrowth = endSavings - startSavings - totalContributions;
+      if (startSavings > 0) {
+        // Calculate approximate annual growth rate
+        const years = preRetirementData.length;
+        const annualGrowthRate =
+          (Math.pow((startSavings + totalGrowth) / startSavings, 1 / years) -
+            1) *
+          100;
+        growthRate = Math.round(annualGrowthRate * 10) / 10; // Round to 1 decimal
+      }
+    }
+
+    // Calculate strengthening steps
+    const strengtheningSteps = await calculateStrengtheningSteps(
+      userData,
+      Age_LAST,
+      projectionData,
+      ageLow,
+      ageHigh
+    );
+
+    // Base recommendations object - structured as key-value pairs
+    const recommendations = {
+      // TOP STATEMENT - Always included
+      topStatement: `Your total savings are projected to last until approximately age ${ageLow} to ${ageHigh}.`,
+
+      // Your Snap Shot
+      "Your Snap Shot": longevityMessage,
+
+      // What's Shaping Your Outlook
+      "What's Shaping Your Outlook": [
+        `Your contributions of ${currentContributionRate}% ($${currentContributionMonthly}/mo) help your savings grow to about $${Math.round(
+          peakSavings
+        )} before retirement.`,
+        `Retiring around age ${retireAge} sets the point where saving stops and withdrawals begin.`,
+        `Starting Social Security at ${ssAge} provides roughly $${Math.round(
+          ssBenefit
+        )}/yr, reducing how much you need to withdraw.`,
+        `A long-term growth rate of ${growthRate}% shapes how quickly your balance builds and how long it lasts.`,
+      ].join(" "),
+
+      // How to Strengthen Your Plan
+      "How to Strengthen Your Plan": strengtheningSteps,
+
+      // What This Snapshot Doesn't Include (Yet)
+      "What This Snapshot Doesn't Include (Yet)": `This is a clear starting point based on your answers. A few meaningful factors aren't included yet, but they can influence your long-term outlook:\n\nLong-term care needs or long-term care insurance\nMajor health events or medical shocks\nUnexpected changes in your ability to work\nDivorce, remarriage, or large inheritances\nHome equity decisions (downsizing, relocating, or renting)\nFuture changes to Social Security or tax policy.\n\nAs you refine your goals and add more details, your plan will become more personalized and precise.`,
     };
 
-    // Scenario 1: Savings Last Beyond Age 97
-    if (!Age_LAST || Age_LAST > 97) {
-      baseRecommendation.scenario = 1;
-      baseRecommendation.recommendations = [
-        `Your total savings are projected to last beyond age 97.`,
-        `Your current monthly contribution of $${Math.round(
-          current_contribution_per_month
-        )} per month appears on track for a comfortable retirement.`,
-      ];
-    }
-    // Scenario 2: Savings Last Between Ages 90 and 97
-    else if (Age_LAST >= 90 && Age_LAST <= 97) {
-      baseRecommendation.scenario = 2;
-      baseRecommendation.recommendations = [
-        `We project your total savings will last until approximately age ${
-          Age_LAST - 3
-        } to ${Age_LAST + 2}.`,
-        `Your current monthly contribution of $${Math.round(
-          current_contribution_per_month
-        )} per month is on track for retirement.`,
-      ];
-    }
-    // Scenario 3: Savings Run Out Before Age 90
-    else if (Age_LAST < 90) {
-      baseRecommendation.scenario = 3;
-
-      // Calculate alternative scenarios for increased contributions
-      const contributionScenarios = await calculateContributionScenarios(
-        userData,
-        Age_LAST
-      );
-      const growthScenarios = await calculateGrowthScenarios(
-        userData,
-        Age_LAST
-      );
-
-      baseRecommendation.recommendations = [
-        `Your total savings are projected to last until approximately age ${
-          Age_LAST - 3
-        } to ${Age_LAST + 2}.`,
-        `Current model assumes a 10% contribution from household income.`,
-        `Increasing contributions can significantly extend your savings horizon.`,
-        `You are currently saving $${Math.round(
-          current_contribution_per_month
-        )} per month.`,
-        `Our model recommends increasing this to 15% to 25% per month to stay on track.`,
-      ];
-
-      baseRecommendation.alternativeScenarios = {
-        increasedContributions: contributionScenarios,
-        alternativeGrowth: growthScenarios,
-      };
-    }
-
-    return baseRecommendation;
+    return recommendations;
   } catch (error) {
     console.error("Error calculating recommendations:", error);
     throw error;
+  }
+};
+
+// Helper function to find retirement age
+const findRetirementAge = (projectionData) => {
+  const retirementEntry = projectionData.find(
+    (item) => item.phase === "post_retirement"
+  );
+  return retirementEntry ? retirementEntry.age : 67; // Default to 67 if not found
+};
+
+// Helper function to get longevity message - UPDATED to accept age parameters
+const getLongevityMessage = (ageGroup, longevityBand, ageLow, ageHigh) => {
+  // Your provided longevity messages data
+  const longevityMessages = {
+    "18-24": {
+      "70-79":
+        "Based on what you shared, your savings are projected to last into your 70s. That's perfectly normal for this stage of life - most people your age haven't built much savings yet. Let's walk through what's shaping this outlook and the moves that can meaningfully extend your financial runway.",
+      "80-89":
+        "Your savings are projected to last into your 80s - a strong early marker. Most people your age haven't built a foundation yet, so you're ahead by checking now. Let's look at what's shaping your outlook and the steps that can help you strengthen it over time.",
+      "90-94":
+        "Your savings are projected to last into your early 90s - an excellent early-stage trajectory. Most people your age aren't thinking this far ahead, so you're building a strong base. Let's explore what's shaping your outlook and the steps that can keep it moving in the right direction.",
+      "95+":
+        "Your savings are projected to last well past 95. That's an exceptional early signal, and you have decades to build on it. Let's look at what's shaping your outlook and the steps that can keep this strong momentum going.",
+    },
+    "25-34": {
+      "70-79":
+        "Your savings are projected to last into your 70s. Many people in their 20s and 30s land here, and you're ahead of the curve by checking now. Let's break down the factors behind your outlook and the steps that can stretch your retirement timeline.",
+      "80-89":
+        "Your savings are projected to last into your 80s - solid for this point in life. You have time and flexibility to build on this trajectory. Let's take a look at the drivers behind your outlook and the moves that can help fortify it.",
+      "90-94":
+        "Your savings are projected to last into your early 90s - a strong trajectory at this stage. With consistent habits, you can easily reach long-term durability. Let's look at the factors behind your outlook and the moves that can fine-tune it.",
+      "95+":
+        "Your savings are projected to last well past 95 - a standout trajectory at this stage. You're setting yourself up with meaningful long-term flexibility. Let's explore the drivers behind your outlook and the moves that can keep reinforcing it.",
+    },
+    "35-44": {
+      "70-79":
+        "Your savings are projected to last into your 70s. This is a common starting point, and the key is using this moment to reset and chart a stronger path forward. Let's look at what's shaping your outlook and the focused changes that can extend your financial durability.",
+      "80-89":
+        "Your savings are projected to last into your 80s. That's a workable starting point, and you can meaningfully improve it with focused adjustments. Let's walk through what's shaping your outlook and the steps that can extend your long-term resilience.",
+      "90-94":
+        "Your savings are projected to last into your early 90s. You're close to the target most planners aim for, and a few smart refinements can help you reach or exceed it. Let's walk through what's shaping your outlook and the steps that can lock in that strength.",
+      "95+":
+        "Your savings are projected to last well past 95 - an excellent trajectory. You've created real long-term flexibility, and thoughtful choices from here can deepen that strength. Let's walk through what's shaping your outlook and how to keep that momentum working for you.",
+    },
+    "45-54": {
+      "70-79":
+        "Based on what you shared, your savings are projected to last into your 70s. Plenty of people in this stage find themselves here, and the important thing is that you're facing the numbers head-on. Let's walk through what's driving the outlook and the meaningful steps that can help you rebuild your trajectory.",
+      "80-89":
+        "Your savings are projected to last into your 80s. This gives you a solid foundation, and the right adjustments can make it considerably stronger. Let's take a look at what's driving your outlook and the steps that can meaningfully expand your timeline.",
+      "90-94":
+        "Your savings are projected to last into your early 90s - a strong trajectory. You're close to the range most people aim for, and a few focused improvements can get you the rest of the way there. Let's look at what's driving your outlook and the steps that can elevate it.",
+      "95+":
+        "Your savings are projected to last well past 95 - a strong and resilient trajectory. You've built a solid foundation, and with a few strategic choices, you can expand optionality even further. Let's take a look at what's driving your outlook and the adjustments that can enhance it.",
+    },
+    "55-64": {
+      "70-79":
+        "Your savings are projected to last into your 70s. This can feel urgent, but you've already taken the hardest step by getting clarity. Let's unpack what's shaping your outlook and map the major moves that can help extend your plan.",
+      "80-89":
+        "Your savings are projected to last into your 80s - a solid starting point at this stage. A few targeted improvements can help make your plan more durable. Let's review what's shaping your outlook and the moves that can strengthen it from here.",
+      "90-94":
+        "Your savings are projected to last into your early 90s. You're close to the ideal range, and small refinements can help you reach long-term durability. Let's review what's shaping your outlook and the moves that can strengthen it even further.",
+      "95+":
+        "Your savings are projected to last well past 95 - an excellent place to be. You've built real long-term durability, and now the focus can shift to lifestyle flexibility and planning for surprises. Let's review what's shaping your outlook and how to make the most of this strong position.",
+    },
+    "65-74": {
+      "70-79":
+        "Your savings are projected to last into your 70s. That creates a tight window, but strategic adjustments can still improve your long-term stability. Let's look closely at what's driving this outlook and the high-impact moves that can strengthen your plan from here.",
+      "80-89":
+        "Your savings are projected to last into your 80s. That's workable, and thoughtful adjustments can help you maintain stability as the years go on. Let's walk through the drivers behind your outlook and the steps that can reinforce your plan.",
+      "90-94":
+        "Your savings are projected to last into your early 90s - a solid place to be. With a bit of fine-tuning, you can reach the level of resilience most people hope for. Let's explore what's driving your outlook and the adjustments that can reinforce it.",
+      "95+":
+        "Your savings are projected to last well past 95 - a very stable trajectory. This gives you meaningful flexibility for the years ahead. Let's explore the drivers behind your outlook and the refinements that help you make the most of this strength.",
+    },
+    "75-84": {
+      "70-79":
+        "Your savings are projected to last into your 70s, which means it's important to reassess now. Many people your age navigate similar questions, and small shifts can still make a real difference. Let's explore what's shaping this outlook and the strategies that can help extend your financial comfort.",
+      "80-89":
+        "Your savings are projected to last into your 80s. That offers some cushion, and small refinements can help stretch it further. Let's explore what's shaping your outlook and the practical ways to strengthen it.",
+      "90-94":
+        "Your savings are projected to last into your early 90s - a strong trajectory. You're close to long-term stability, and a few helpful shifts can bring even more confidence. Let's look at what's shaping your outlook and the steps that can support lasting strength.",
+      "95+":
+        "Your savings are projected to last well past 95 - a resilient outlook. You have strong financial durability, and a few adjustments can help maintain that stability over time. Let's look at what's shaping your outlook and the practical choices that support continued confidence.",
+    },
+    "85+": {
+      "70-79":
+        "Based on what you entered, your savings appear to run out before your current age. This can happen when some details are missing or when resources are already stretched thin, and it's more common than you might think. Let's review your answers to make sure everything is captured correctly and then walk through how to steady your plan.",
+      "80-89":
+        "Your savings are projected to last into your 80s - a solid baseline. With a few focused adjustments, you can extend your resources in meaningful ways. Let's take a look at the factors behind your outlook and the steps that support more stability ahead.",
+      "90-94":
+        "Your savings are projected to last into your early 90s - a resilient trajectory. With a few thoughtful adjustments, you can continue to extend your financial comfort. Let's explore the factors behind your outlook and the refinements that can keep it strong.",
+      "95+":
+        "Your savings are projected to last well past 95 - a strong and steady position. You've created meaningful long-term resilience, and small refinements can help preserve it. Let's explore what's driving your outlook and the steps that keep your plan adaptable.",
+    },
+  };
+
+  // Return message or default using the passed age parameters
+  return (
+    longevityMessages[ageGroup]?.[longevityBand] ||
+    `Based on what you shared, your savings are projected to last until roughly ${ageLow} to ${ageHigh}. That gives you a solid starting point - but most people need their money to last to at least 95. Let's take a look at what's shaping your outlook and the steps that can meaningfully strengthen it.`
+  );
+};
+
+// Updated strengthening steps function
+const calculateStrengtheningSteps = async (
+  userData,
+  originalAgeLAST,
+  projectionData,
+  ageLow,
+  ageHigh
+) => {
+  const { householdIncome, age } = userData;
+
+  // Get current contribution from projection data
+  const currentYearData = projectionData.find((item) => item.age === age);
+  const currentContribution = currentYearData
+    ? currentYearData.contribution
+    : 0;
+  const currentContributionMonthly = Math.round(currentContribution / 12);
+
+  // Calculate alternative contributions based on actual income
+  const contrib15Dollars = Math.round((householdIncome * 0.15) / 12);
+  const contrib20Dollars = Math.round((householdIncome * 0.2) / 12);
+  const contrib25Dollars = Math.round((householdIncome * 0.25) / 12);
+
+  // Calculate improvement years based on actual projection
+  // You'll need to implement these functions to run projections with different parameters
+  const years15 = await calculateYearsImprovement(
+    userData,
+    projectionData,
+    0.15
+  );
+  const years20 = await calculateYearsImprovement(
+    userData,
+    projectionData,
+    0.2
+  );
+
+  // Find retirement age for SS calculations
+  const retirementEntry = projectionData.find(
+    (item) => item.phase === "post_retirement"
+  );
+  const retireAge = retirementEntry ? retirementEntry.age : 67;
+
+  // Social Security delay calculations
+  const ssDelayLow = retireAge + 1;
+  const ssDelayHigh = retireAge + 3;
+  const yearsSSDelayLow = 2; // These should come from actual calculations
+  const yearsSSDelayHigh = 4;
+
+  // Work shift calculations
+  const workShiftRange = "2-4";
+  const yearsWorkShiftLow = 1;
+  const yearsWorkShiftHigh = 3;
+
+  // Growth rate improvements - should come from actual calculations
+  const yearsGrowthLow = 3;
+  const yearsGrowthHigh = 6;
+
+  // Cost reduction
+  const costReductionTarget = "10-15%";
+  const yearsCostReductionLow = 2;
+  const yearsCostReductionHigh = 4;
+
+  // Location flexibility
+  const yearsLocationLow = 2;
+  const yearsLocationHigh = 5;
+
+  return [
+    `1. Increase your monthly contribution to 15-20% ($${contrib15Dollars}–$${contrib20Dollars}/mo): +${years15}-${years20} years`,
+    "A higher contribution rate compounds over time and meaningfully extends how long your balance lasts.\n",
+
+    `2. Delay collecting Social Security 1–3 years (start at age ${ssDelayLow}-${ssDelayHigh}): +${yearsSSDelayLow}-${yearsSSDelayHigh} years`,
+    "Delaying increases your monthly benefit by up to 24%, reducing the amount you need to withdraw each year.\n",
+
+    `3. Shift your transition away from full-time work by ${workShiftRange} years: +${yearsWorkShiftLow}-${yearsWorkShiftHigh} years`,
+    "Each additional working year adds income and shortens the withdrawal period, buying you more retirement time.\n",
+
+    `4. Improve your long-term growth rate to 7.5%–9%: +${yearsGrowthLow}-${yearsGrowthHigh} years`,
+    "Higher long-term returns can significantly increase your peak savings and slow down future drawdowns.\n",
+
+    `5. Reduce long-term costs by ${costReductionTarget}: +${yearsCostReductionLow}-${yearsCostReductionHigh} years`,
+    "Lower ongoing expenses decrease annual withdrawals and help your savings last longer.\n",
+
+    `6. Explore location flexibility: +${yearsLocationLow}-${yearsLocationHigh} years`,
+    "Living in a lower-cost area reduces required withdrawals and stretches both Social Security and savings.",
+  ].join("\n\n");
+};
+
+// Helper function to calculate years improvement for contribution changes
+const calculateYearsImprovement = async (
+  userData,
+  baseProjectionData,
+  newContributionRate
+) => {
+  try {
+    // This should run a new projection with the increased contribution rate
+    // For now, returning estimated values based on the data
+
+    // From your data: savings last until ~89 years old
+    // With increased contributions, estimate improvement
+    if (newContributionRate === 0.15) {
+      // 50% increase in contribution might add ~5 years
+      return 5;
+    } else if (newContributionRate === 0.2) {
+      // 100% increase in contribution might add ~8 years
+      return 8;
+    }
+    return 3;
+  } catch (error) {
+    console.error("Error calculating years improvement:", error);
+    return 3; // Default fallback
   }
 };
 

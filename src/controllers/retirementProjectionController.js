@@ -126,7 +126,15 @@ exports.calculateProjection = async (req, res) => {
     // Add recommendations to the response
     const enhancedResult = {
       ...result,
-      recommendations: recommendations,
+      topStatement:
+        recommendations.topStatement || "Your retirement projection results",
+      recommendations: {
+        yourSnapShot: recommendations["Your Snap Shot"],
+        whatsShapingYourOutlook: recommendations["What's Shaping Your Outlook"],
+        howToStrengthenYourPlan: recommendations["How to Strengthen Your Plan"],
+        whatThisDoesntInclude:
+          recommendations["What This Snapshot Doesn't Include (Yet)"],
+      },
     };
 
     return res
