@@ -921,11 +921,11 @@ const calculateRecommendations = async (
       "What's Shaping Your Outlook": [
         `Your contributions of ${currentContributionRate}% ($${currentContributionMonthly}/mo) help your savings grow to about $${Math.round(
           peakSavings
-        )} before retirement.`,
-        `Retiring around age ${retireAge} sets the point where saving stops and withdrawals begin.`,
+        )} before retirement.<br>`,
+        `Retiring around age ${retireAge} sets the point where saving stops and withdrawals begin.<br>`,
         `Starting Social Security at ${ssAge} provides roughly $${Math.round(
           ssBenefit
-        )}/yr, reducing how much you need to withdraw.`,
+        )}/yr, reducing how much you need to withdraw.<br>`,
         `A long-term growth rate of ${growthRate}% shapes how quickly your balance builds and how long it lasts.`,
       ].join(" "),
 
@@ -933,7 +933,7 @@ const calculateRecommendations = async (
       "How to Strengthen Your Plan": strengtheningSteps,
 
       // What This Snapshot Doesn't Include (Yet)
-      "What This Snapshot Doesn't Include (Yet)": `This is a clear starting point based on your answers. A few meaningful factors aren't included yet, but they can influence your long-term outlook:\n\nLong-term care needs or long-term care insurance\nMajor health events or medical shocks\nUnexpected changes in your ability to work\nDivorce, remarriage, or large inheritances\nHome equity decisions (downsizing, relocating, or renting)\nFuture changes to Social Security or tax policy.\n\nAs you refine your goals and add more details, your plan will become more personalized and precise.`,
+      "What This Snapshot Doesn't Include (Yet)": `This is a clear starting point based on your answers.\n A few meaningful factors aren't included yet, but they can influence your long-term outlook:\n\nLong-term care needs or long-term care insurance\nMajor health events or medical shocks\nUnexpected changes in your ability to work\nDivorce, remarriage, or large inheritances\nHome equity decisions (downsizing, relocating, or renting)\nFuture changes to Social Security or tax policy.\n\nAs you refine your goals and add more details, your plan will become more personalized and precise.`,
     };
 
     return recommendations;
