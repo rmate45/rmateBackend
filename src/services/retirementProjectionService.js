@@ -933,7 +933,7 @@ const calculateRecommendations = async (
       "How to Strengthen Your Plan": strengtheningSteps,
 
       // What This Snapshot Doesn't Include (Yet)
-      "What This Snapshot Doesn't Include (Yet)": `This is a clear starting point based on your answers.\n A few meaningful factors aren't included yet, but they can influence your long-term outlook:\n\nLong-term care needs or long-term care insurance\nMajor health events or medical shocks\nUnexpected changes in your ability to work\nDivorce, remarriage, or large inheritances\nHome equity decisions (downsizing, relocating, or renting)\nFuture changes to Social Security or tax policy.\n\nAs you refine your goals and add more details, your plan will become more personalized and precise.`,
+      "What This Snapshot Doesn't Include (Yet)": `This is a clear starting point based on your answers.<br> A few meaningful factors aren't included yet, but they can influence your long-term outlook: Long-term care needs or long-term care insurance.<br> Major health events or medical shocks Unexpected changes in your ability to work Divorce, remarriage, or large inheritances.<br>Home equity decisions (downsizing, relocating, or renting). Future changes to Social Security or tax policy.<br>As you refine your goals and add more details, your plan will become more personalized and precise.`,
     };
 
     return recommendations;
@@ -957,90 +957,90 @@ const getLongevityMessage = (ageGroup, longevityBand, ageLow, ageHigh) => {
   const longevityMessages = {
     "18-24": {
       "70-79":
-        "Based on what you shared, your savings are projected to last into your 70s. That's perfectly normal for this stage of life - most people your age haven't built much savings yet. Let's walk through what's shaping this outlook and the moves that can meaningfully extend your financial runway.",
+        "Based on what you shared, your savings are projected to last into your 70s.<br> That's perfectly normal for this stage of life - most people your age haven't built much savings yet.<br> Let's walk through what's shaping this outlook and the moves that can meaningfully extend your financial runway.",
       "80-89":
-        "Your savings are projected to last into your 80s - a strong early marker. Most people your age haven't built a foundation yet, so you're ahead by checking now. Let's look at what's shaping your outlook and the steps that can help you strengthen it over time.",
+        "Your savings are projected to last into your 80s - a strong early marker.<br> Most people your age haven't built a foundation yet, so you're ahead by checking now.<br> Let's look at what's shaping your outlook and the steps that can help you strengthen it over time.",
       "90-94":
-        "Your savings are projected to last into your early 90s - an excellent early-stage trajectory. Most people your age aren't thinking this far ahead, so you're building a strong base. Let's explore what's shaping your outlook and the steps that can keep it moving in the right direction.",
+        "Your savings are projected to last into your early 90s - an excellent early-stage trajectory.<br> Most people your age aren't thinking this far ahead, so you're building a strong base.<br> Let's explore what's shaping your outlook and the steps that can keep it moving in the right direction.",
       "95+":
-        "Your savings are projected to last well past 95. That's an exceptional early signal, and you have decades to build on it. Let's look at what's shaping your outlook and the steps that can keep this strong momentum going.",
+        "Your savings are projected to last well past 95.<br> That's an exceptional early signal, and you have decades to build on it.<br> Let's look at what's shaping your outlook and the steps that can keep this strong momentum going.",
     },
     "25-34": {
       "70-79":
-        "Your savings are projected to last into your 70s. Many people in their 20s and 30s land here, and you're ahead of the curve by checking now. Let's break down the factors behind your outlook and the steps that can stretch your retirement timeline.",
+        "Your savings are projected to last into your 70s.<br> Many people in their 20s and 30s land here, and you're ahead of the curve by checking now.<br> Let's break down the factors behind your outlook and the steps that can stretch your retirement timeline.",
       "80-89":
-        "Your savings are projected to last into your 80s - solid for this point in life. You have time and flexibility to build on this trajectory. Let's take a look at the drivers behind your outlook and the moves that can help fortify it.",
+        "Your savings are projected to last into your 80s - solid for this point in life.<br> You have time and flexibility to build on this trajectory.<br> Let's take a look at the drivers behind your outlook and the moves that can help fortify it.",
       "90-94":
-        "Your savings are projected to last into your early 90s - a strong trajectory at this stage. With consistent habits, you can easily reach long-term durability. Let's look at the factors behind your outlook and the moves that can fine-tune it.",
+        "Your savings are projected to last into your early 90s - a strong trajectory at this stage.<br> With consistent habits, you can easily reach long-term durability.<br> Let's look at the factors behind your outlook and the moves that can fine-tune it.",
       "95+":
-        "Your savings are projected to last well past 95 - a standout trajectory at this stage. You're setting yourself up with meaningful long-term flexibility. Let's explore the drivers behind your outlook and the moves that can keep reinforcing it.",
+        "Your savings are projected to last well past 95 - a standout trajectory at this stage.<br> You're setting yourself up with meaningful long-term flexibility.<br> Let's explore the drivers behind your outlook and the moves that can keep reinforcing it.",
     },
     "35-44": {
       "70-79":
-        "Your savings are projected to last into your 70s. This is a common starting point, and the key is using this moment to reset and chart a stronger path forward. Let's look at what's shaping your outlook and the focused changes that can extend your financial durability.",
+        "Your savings are projected to last into your 70s.<br> This is a common starting point, and the key is using this moment to reset and chart a stronger path forward.<br> Let's look at what's shaping your outlook and the focused changes that can extend your financial durability.",
       "80-89":
-        "Your savings are projected to last into your 80s. That's a workable starting point, and you can meaningfully improve it with focused adjustments. Let's walk through what's shaping your outlook and the steps that can extend your long-term resilience.",
+        "Your savings are projected to last into your 80s.<br> That's a workable starting point, and you can meaningfully improve it with focused adjustments.<br> Let's walk through what's shaping your outlook and the steps that can extend your long-term resilience.",
       "90-94":
-        "Your savings are projected to last into your early 90s. You're close to the target most planners aim for, and a few smart refinements can help you reach or exceed it. Let's walk through what's shaping your outlook and the steps that can lock in that strength.",
+        "Your savings are projected to last into your early 90s.<br> You're close to the target most planners aim for, and a few smart refinements can help you reach or exceed it.<br> Let's walk through what's shaping your outlook and the steps that can lock in that strength.",
       "95+":
-        "Your savings are projected to last well past 95 - an excellent trajectory. You've created real long-term flexibility, and thoughtful choices from here can deepen that strength. Let's walk through what's shaping your outlook and how to keep that momentum working for you.",
+        "Your savings are projected to last well past 95 - an excellent trajectory.<br> You've created real long-term flexibility, and thoughtful choices from here can deepen that strength.<br> Let's walk through what's shaping your outlook and how to keep that momentum working for you.",
     },
     "45-54": {
       "70-79":
-        "Based on what you shared, your savings are projected to last into your 70s. Plenty of people in this stage find themselves here, and the important thing is that you're facing the numbers head-on. Let's walk through what's driving the outlook and the meaningful steps that can help you rebuild your trajectory.",
+        "Based on what you shared, your savings are projected to last into your 70s.<br> Plenty of people in this stage find themselves here, and the important thing is that you're facing the numbers head-on.<br> Let's walk through what's driving the outlook and the meaningful steps that can help you rebuild your trajectory.",
       "80-89":
-        "Your savings are projected to last into your 80s. This gives you a solid foundation, and the right adjustments can make it considerably stronger. Let's take a look at what's driving your outlook and the steps that can meaningfully expand your timeline.",
+        "Your savings are projected to last into your 80s.<br> This gives you a solid foundation, and the right adjustments can make it considerably stronger.<br> Let's take a look at what's driving your outlook and the steps that can meaningfully expand your timeline.",
       "90-94":
-        "Your savings are projected to last into your early 90s - a strong trajectory. You're close to the range most people aim for, and a few focused improvements can get you the rest of the way there. Let's look at what's driving your outlook and the steps that can elevate it.",
+        "Your savings are projected to last into your early 90s - a strong trajectory.<br> You're close to the range most people aim for, and a few focused improvements can get you the rest of the way there.<br> Let's look at what's driving your outlook and the steps that can elevate it.",
       "95+":
-        "Your savings are projected to last well past 95 - a strong and resilient trajectory. You've built a solid foundation, and with a few strategic choices, you can expand optionality even further. Let's take a look at what's driving your outlook and the adjustments that can enhance it.",
+        "Your savings are projected to last well past 95 - a strong and resilient trajectory.<br> You've built a solid foundation, and with a few strategic choices, you can expand optionality even further.<br> Let's take a look at what's driving your outlook and the adjustments that can enhance it.",
     },
     "55-64": {
       "70-79":
-        "Your savings are projected to last into your 70s. This can feel urgent, but you've already taken the hardest step by getting clarity. Let's unpack what's shaping your outlook and map the major moves that can help extend your plan.",
+        "Your savings are projected to last into your 70s.<br> This can feel urgent, but you've already taken the hardest step by getting clarity.<br> Let's unpack what's shaping your outlook and map the major moves that can help extend your plan.",
       "80-89":
-        "Your savings are projected to last into your 80s - a solid starting point at this stage. A few targeted improvements can help make your plan more durable. Let's review what's shaping your outlook and the moves that can strengthen it from here.",
+        "Your savings are projected to last into your 80s - a solid starting point at this stage.<br> A few targeted improvements can help make your plan more durable.<br> Let's review what's shaping your outlook and the moves that can strengthen it from here.",
       "90-94":
-        "Your savings are projected to last into your early 90s. You're close to the ideal range, and small refinements can help you reach long-term durability. Let's review what's shaping your outlook and the moves that can strengthen it even further.",
+        "Your savings are projected to last into your early 90s.<br> You're close to the ideal range, and small refinements can help you reach long-term durability.<br> Let's review what's shaping your outlook and the moves that can strengthen it even further.",
       "95+":
-        "Your savings are projected to last well past 95 - an excellent place to be. You've built real long-term durability, and now the focus can shift to lifestyle flexibility and planning for surprises. Let's review what's shaping your outlook and how to make the most of this strong position.",
+        "Your savings are projected to last well past 95 - an excellent place to be.<br> You've built real long-term durability, and now the focus can shift to lifestyle flexibility and planning for surprises.<br> Let's review what's shaping your outlook and how to make the most of this strong position.",
     },
     "65-74": {
       "70-79":
-        "Your savings are projected to last into your 70s. That creates a tight window, but strategic adjustments can still improve your long-term stability. Let's look closely at what's driving this outlook and the high-impact moves that can strengthen your plan from here.",
+        "Your savings are projected to last into your 70s.<br> That creates a tight window, but strategic adjustments can still improve your long-term stability.<br> Let's look closely at what's driving this outlook and the high-impact moves that can strengthen your plan from here.",
       "80-89":
-        "Your savings are projected to last into your 80s. That's workable, and thoughtful adjustments can help you maintain stability as the years go on. Let's walk through the drivers behind your outlook and the steps that can reinforce your plan.",
+        "Your savings are projected to last into your 80s.<br> That's workable, and thoughtful adjustments can help you maintain stability as the years go on.<br> Let's walk through the drivers behind your outlook and the steps that can reinforce your plan.",
       "90-94":
-        "Your savings are projected to last into your early 90s - a solid place to be. With a bit of fine-tuning, you can reach the level of resilience most people hope for. Let's explore what's driving your outlook and the adjustments that can reinforce it.",
+        "Your savings are projected to last into your early 90s - a solid place to be.<br> With a bit of fine-tuning, you can reach the level of resilience most people hope for.<br> Let's explore what's driving your outlook and the adjustments that can reinforce it.",
       "95+":
-        "Your savings are projected to last well past 95 - a very stable trajectory. This gives you meaningful flexibility for the years ahead. Let's explore the drivers behind your outlook and the refinements that help you make the most of this strength.",
+        "Your savings are projected to last well past 95 - a very stable trajectory.<br> This gives you meaningful flexibility for the years ahead.<br> Let's explore the drivers behind your outlook and the refinements that help you make the most of this strength.",
     },
     "75-84": {
       "70-79":
-        "Your savings are projected to last into your 70s, which means it's important to reassess now. Many people your age navigate similar questions, and small shifts can still make a real difference. Let's explore what's shaping this outlook and the strategies that can help extend your financial comfort.",
+        "Your savings are projected to last into your 70s, which means it's important to reassess now.<br> Many people your age navigate similar questions, and small shifts can still make a real difference.<br> Let's explore what's shaping this outlook and the strategies that can help extend your financial comfort.",
       "80-89":
-        "Your savings are projected to last into your 80s. That offers some cushion, and small refinements can help stretch it further. Let's explore what's shaping your outlook and the practical ways to strengthen it.",
+        "Your savings are projected to last into your 80s.<br> That offers some cushion, and small refinements can help stretch it further.<br> Let's explore what's shaping your outlook and the practical ways to strengthen it.",
       "90-94":
-        "Your savings are projected to last into your early 90s - a strong trajectory. You're close to long-term stability, and a few helpful shifts can bring even more confidence. Let's look at what's shaping your outlook and the steps that can support lasting strength.",
+        "Your savings are projected to last into your early 90s - a strong trajectory.<br> You're close to long-term stability, and a few helpful shifts can bring even more confidence.<br> Let's look at what's shaping your outlook and the steps that can support lasting strength.",
       "95+":
-        "Your savings are projected to last well past 95 - a resilient outlook. You have strong financial durability, and a few adjustments can help maintain that stability over time. Let's look at what's shaping your outlook and the practical choices that support continued confidence.",
+        "Your savings are projected to last well past 95 - a resilient outlook.<br> You have strong financial durability, and a few adjustments can help maintain that stability over time.<br> Let's look at what's shaping your outlook and the practical choices that support continued confidence.",
     },
     "85+": {
       "70-79":
-        "Based on what you entered, your savings appear to run out before your current age. This can happen when some details are missing or when resources are already stretched thin, and it's more common than you might think. Let's review your answers to make sure everything is captured correctly and then walk through how to steady your plan.",
+        "Based on what you entered, your savings appear to run out before your current age.<br> This can happen when some details are missing or when resources are already stretched thin, and it's more common than you might think.<br> Let's review your answers to make sure everything is captured correctly and then walk through how to steady your plan.",
       "80-89":
-        "Your savings are projected to last into your 80s - a solid baseline. With a few focused adjustments, you can extend your resources in meaningful ways. Let's take a look at the factors behind your outlook and the steps that support more stability ahead.",
+        "Your savings are projected to last into your 80s - a solid baseline.<br> With a few focused adjustments, you can extend your resources in meaningful ways.<br> Let's take a look at the factors behind your outlook and the steps that support more stability ahead.",
       "90-94":
-        "Your savings are projected to last into your early 90s - a resilient trajectory. With a few thoughtful adjustments, you can continue to extend your financial comfort. Let's explore the factors behind your outlook and the refinements that can keep it strong.",
+        "Your savings are projected to last into your early 90s - a resilient trajectory.<br> With a few thoughtful adjustments, you can continue to extend your financial comfort.<br> Let's explore the factors behind your outlook and the refinements that can keep it strong.",
       "95+":
-        "Your savings are projected to last well past 95 - a strong and steady position. You've created meaningful long-term resilience, and small refinements can help preserve it. Let's explore what's driving your outlook and the steps that keep your plan adaptable.",
+        "Your savings are projected to last well past 95 - a strong and steady position.<br> You've created meaningful long-term resilience, and small refinements can help preserve it.<br> Let's explore what's driving your outlook and the steps that keep your plan adaptable.",
     },
   };
 
   // Return message or default using the passed age parameters
   return (
     longevityMessages[ageGroup]?.[longevityBand] ||
-    `Based on what you shared, your savings are projected to last until roughly ${ageLow} to ${ageHigh}. That gives you a solid starting point - but most people need their money to last to at least 95. Let's take a look at what's shaping your outlook and the steps that can meaningfully strengthen it.`
+    `Based on what you shared, your savings are projected to last until roughly ${ageLow} to ${ageHigh}.<br> That gives you a solid starting point - but most people need their money to last to at least 95.<br> Let's take a look at what's shaping your outlook and the steps that can meaningfully strengthen it.`
   );
 };
 
@@ -1111,19 +1111,19 @@ const calculateStrengtheningSteps = async (
 
   return [
     `1. Increase your monthly contribution to 15-20% ($${contrib15Dollars}–$${contrib20Dollars}/mo): +${years15}-${years20} years`,
-    "A higher contribution rate compounds over time and meaningfully extends how long your balance lasts.\n",
+    "A higher contribution rate compounds over time and meaningfully extends how long your balance lasts.<br>",
 
     `2. Delay collecting Social Security 1–3 years (start at age ${ssDelayLow}-${ssDelayHigh}): +${yearsSSDelayLow}-${yearsSSDelayHigh} years`,
-    "Delaying increases your monthly benefit by up to 24%, reducing the amount you need to withdraw each year.\n",
+    "Delaying increases your monthly benefit by up to 24%, reducing the amount you need to withdraw each year.<br>",
 
     `3. Shift your transition away from full-time work by ${workShiftRange} years: +${yearsWorkShiftLow}-${yearsWorkShiftHigh} years`,
-    "Each additional working year adds income and shortens the withdrawal period, buying you more retirement time.\n",
+    "Each additional working year adds income and shortens the withdrawal period, buying you more retirement time.<br>",
 
     `4. Improve your long-term growth rate to 7.5%–9%: +${yearsGrowthLow}-${yearsGrowthHigh} years`,
-    "Higher long-term returns can significantly increase your peak savings and slow down future drawdowns.\n",
+    "Higher long-term returns can significantly increase your peak savings and slow down future drawdowns.<br>",
 
     `5. Reduce long-term costs by ${costReductionTarget}: +${yearsCostReductionLow}-${yearsCostReductionHigh} years`,
-    "Lower ongoing expenses decrease annual withdrawals and help your savings last longer.\n",
+    "Lower ongoing expenses decrease annual withdrawals and help your savings last longer.<br>",
 
     `6. Explore location flexibility: +${yearsLocationLow}-${yearsLocationHigh} years`,
     "Living in a lower-cost area reduces required withdrawals and stretches both Social Security and savings.",
