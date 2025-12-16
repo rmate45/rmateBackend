@@ -1110,23 +1110,23 @@ const calculateStrengtheningSteps = async (
   const yearsLocationHigh = 5;
 
   return [
-    `1. Increase your monthly contribution to 15-20% ($${contrib15Dollars}–$${contrib20Dollars}/mo): +${years15}-${years20} years`,
-    "A higher contribution rate compounds over time and meaningfully extends how long your balance lasts.<br>",
+    `1. Increase your monthly contribution to 15-20% ($${contrib15Dollars}–$${contrib20Dollars}/mo): +${years15}-${years20} years,
+     A higher contribution rate compounds over time and meaningfully extends how long your balance lasts.<br>`,
 
-    `2. Delay collecting Social Security 1–3 years (start at age ${ssDelayLow}-${ssDelayHigh}): +${yearsSSDelayLow}-${yearsSSDelayHigh} years`,
-    "Delaying increases your monthly benefit by up to 24%, reducing the amount you need to withdraw each year.<br>",
+    `2. Delay collecting Social Security 1–3 years (start at age ${ssDelayLow}-${ssDelayHigh}): +${yearsSSDelayLow}-${yearsSSDelayHigh} years,
+     Delaying increases your monthly benefit by up to 24%, reducing the amount you need to withdraw each year.<br>`,
 
-    `3. Shift your transition away from full-time work by ${workShiftRange} years: +${yearsWorkShiftLow}-${yearsWorkShiftHigh} years`,
-    "Each additional working year adds income and shortens the withdrawal period, buying you more retirement time.<br>",
+    `3. Shift your transition away from full-time work by ${workShiftRange} years: +${yearsWorkShiftLow}-${yearsWorkShiftHigh} years,
+     Each additional working year adds income and shortens the withdrawal period, buying you more retirement time.<br>`,
 
-    `4. Improve your long-term growth rate to 7.5%–9%: +${yearsGrowthLow}-${yearsGrowthHigh} years`,
-    "Higher long-term returns can significantly increase your peak savings and slow down future drawdowns.<br>",
+    `4. Improve your long-term growth rate to 7.5%–9%: +${yearsGrowthLow}-${yearsGrowthHigh} years,
+     Higher long-term returns can significantly increase your peak savings and slow down future drawdowns.<br>`,
 
-    `5. Reduce long-term costs by ${costReductionTarget}: +${yearsCostReductionLow}-${yearsCostReductionHigh} years`,
-    "Lower ongoing expenses decrease annual withdrawals and help your savings last longer.<br>",
+    `5. Reduce long-term costs by ${costReductionTarget}: +${yearsCostReductionLow}-${yearsCostReductionHigh} years,
+     Lower ongoing expenses decrease annual withdrawals and help your savings last longer.<br>`,
 
-    `6. Explore location flexibility: +${yearsLocationLow}-${yearsLocationHigh} years`,
-    "Living in a lower-cost area reduces required withdrawals and stretches both Social Security and savings.",
+    `6. Explore location flexibility: +${yearsLocationLow}-${yearsLocationHigh} years,
+     Living in a lower-cost area reduces required withdrawals and stretches both Social Security and savings.`,
   ].join("\n\n");
 };
 
