@@ -900,6 +900,11 @@ const calculateRecommendations = async (
       }
     }
 
+    // NEW: Calculate Retirement Paycheck, Other Income Sources, and Annual Costs for Age 67
+    const retirementPaycheckData = calculateRetirementPaycheck(projectionData);
+    const otherIncomeSources = getOtherIncomeSources();
+    const annualCostsData = calculateAnnualCosts(projectionData, retireAge);
+
     // Calculate strengthening steps
     const strengtheningSteps = await calculateStrengtheningSteps(
       userData,
@@ -929,6 +934,15 @@ const calculateRecommendations = async (
         `A long-term growth rate of ${growthRate}% shapes how quickly your balance builds and how long it lasts.`,
       ].join(" "),
 
+      // NEW: Your Retirement Paycheck (for Age 67)
+      "Your Retirement Paycheck": retirementPaycheckData,
+
+      // NEW: Other Sources of Retirement Income
+      "Other Sources of Retirement Income": otherIncomeSources,
+
+      // NEW: Estimated Annual Costs in Retirement
+      "Estimated Annual Costs in Retirement": annualCostsData,
+
       // How to Strengthen Your Plan
       "How to Strengthen Your Plan": strengtheningSteps,
 
@@ -941,14 +955,6 @@ const calculateRecommendations = async (
     console.error("Error calculating recommendations:", error);
     throw error;
   }
-};
-
-// Helper function to find retirement age
-const findRetirementAge = (projectionData) => {
-  const retirementEntry = projectionData.find(
-    (item) => item.phase === "post_retirement"
-  );
-  return retirementEntry ? retirementEntry.age : 67; // Default to 67 if not found
 };
 
 // Helper function to get longevity message - UPDATED to accept age parameters
@@ -1042,6 +1048,128 @@ const getLongevityMessage = (ageGroup, longevityBand, ageLow, ageHigh) => {
     longevityMessages[ageGroup]?.[longevityBand] ||
     `Based on what you shared, your savings are projected to last until roughly ${ageLow} to ${ageHigh}.<br> That gives you a solid starting point - but most people need their money to last to at least 95.<br> Let's take a look at what's shaping your outlook and the steps that can meaningfully strengthen it.`
   );
+};
+
+// NEW: Calculate Retirement Paycheck for Age 67
+const calculateRetirementPaycheck = (projectionData) => {
+  try {
+    // Find data for age 67
+    const age67Data = projectionData.find((item) => item.age === 67);
+
+    if (!age67Data) {
+      return "Data not available for age 67.";
+    }
+
+    // Extract values
+    const socialSecurityAt67 = age67Data.socialSecurity || 0;
+    const withdrawalAt67 = Math.abs(age67Data.withdrawal || 0); // Use absolute value
+    const incomeAt67 = age67Data.householdIncome || 0; // Projected fake income
+
+    // Calculate derived values according to the provided logic
+    const socialSecurityX = Math.round(socialSecurityAt67 * 0.85); // 85% of social security
+    const socialSecurityY = Math.round(socialSecurityAt67 * 1.15); // 115% of social security
+
+    // If withdrawal data is available, use it, otherwise calculate from income
+    let withdrawalAmount = withdrawalAt67;
+    if (withdrawalAmount <= 0 && incomeAt67 > 0 && socialSecurityAt67 > 0) {
+      // Calculate withdrawal as 70% of income minus social security
+      withdrawalAmount = Math.max(0, incomeAt67 * 0.7 - socialSecurityAt67);
+    }
+
+    const investmentX = Math.round(withdrawalAmount * 0.7); // 70% of withdrawal
+    const investmentY = Math.round(withdrawalAmount * 0.8); // 80% of withdrawal
+    const riaX = Math.round(investmentY * 0.2); // 20% of investmentY
+    const riaY = Math.round(investmentY * 0.3); // 30% of investmentY
+
+    // Format with commas for thousands
+    const formatNumber = (num) => num.toLocaleString("en-US");
+
+    return [
+      `Social Security - You may receive about $${formatNumber(
+        socialSecurityX
+      )} - $${formatNumber(
+        socialSecurityY
+      )} from Social Security per year.<br>`,
+      `Retirement Accounts - You can withdraw $${formatNumber(
+        riaX
+      )} - $${formatNumber(riaY)} per year from your retirement accounts.<br>`,
+      `Investment Accounts - You can withdraw $${formatNumber(
+        investmentX
+      )} - $${formatNumber(
+        investmentY
+      )} per year from your investment account.<br>`,
+      `Withdrawing from both Retirement Accounts & Investment Accounts builds a long term capital advantage.<br>`,
+      `Note: You may need to use a portion of your "Retirement Paycheck" to pay federal and state taxes depending on where you live.`,
+    ].join(" ");
+  } catch (error) {
+    console.error("Error calculating retirement paycheck:", error);
+    return "Unable to calculate retirement paycheck data.";
+  }
+};
+
+// NEW: Get Other Sources of Retirement Income (static content)
+const getOtherIncomeSources = () => {
+  return [
+    `Full or Part-time work - About 20% of seniors 65+ work full or part-time jobs to supplement their retirement income.<br>`,
+    `Annuities - A guaranteed income product that converts your savings into steady, lifelong monthly payments.<br>`,
+    `Whole Life Insurance - A permanent insurance plan that provides lifelong coverage and builds cash value you can access while alive.<br>`,
+    `Tangible Assets - Physical items—like real estate, gold, or collectibles—that hold value and can be sold or used for income in retirement.<br>`,
+    `Reverse Mortgage - A potential option for homeowners 62+ to access home equity as cash or income while remaining in their home and avoiding monthly mortgage payments.`,
+  ].join(" ");
+};
+
+// NEW: Calculate Annual Costs in Retirement for Age 67
+const calculateAnnualCosts = (projectionData, retirementAge) => {
+  try {
+    // Use retirement age or default to 67
+    const targetAge = retirementAge || 67;
+    const ageData = projectionData.find((item) => item.age === targetAge);
+
+    if (!ageData) {
+      return "Data not available for cost calculations.";
+    }
+
+    // Get income at retirement age (projected fake income)
+    const incomeAtRetirement = ageData.householdIncome || 0;
+
+    // Calculate 85% and 115% of income
+    const income85 = incomeAtRetirement * 0.85;
+    const income115 = incomeAtRetirement * 1.15;
+
+    // Calculate cost categories (using provided percentages)
+    const costCategories = {
+      "Food & Grocery": { percentage: 12.8, f1: 0, f2: 0 },
+      Housing: { percentage: 35.7, h1: 0, h2: 0 },
+      Transportation: { percentage: 15, t1: 0, t2: 0 },
+      Healthcare: { percentage: 13.4, hc1: 0, hc2: 0 },
+      Entertainment: { percentage: 4.8, e1: 0, e2: 0 },
+      "Other Expenses": { percentage: 18.3, o1: 0, o2: 0 },
+    };
+
+    // Calculate values for each category
+    Object.keys(costCategories).forEach((category) => {
+      const percentage = costCategories[category].percentage / 100;
+      costCategories[category].f1 = Math.round(income85 * percentage);
+      costCategories[category].f2 = Math.round(income115 * percentage);
+    });
+
+    // Format with commas for thousands
+    const formatNumber = (num) => num.toLocaleString("en-US");
+
+    // Build the output string
+    const costItems = Object.entries(costCategories).map(
+      ([category, values]) => {
+        return `${category} - $${formatNumber(values.f1)} - $${formatNumber(
+          values.f2
+        )}`;
+      }
+    );
+
+    return costItems.join("<br>");
+  } catch (error) {
+    console.error("Error calculating annual costs:", error);
+    return "Unable to calculate annual costs data.";
+  }
 };
 
 // Updated strengthening steps function
