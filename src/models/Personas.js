@@ -60,6 +60,10 @@ const personaSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    position: {
+      type: Number,
+      required: true,
+    },
   },
   { timestamps: true }
 );

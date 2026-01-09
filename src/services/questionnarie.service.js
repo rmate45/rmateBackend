@@ -75,7 +75,7 @@ const getPrimeQuestions = async () => {
 
 const getAllPersonas = async () => {
   try {
-    return await Persona.find().sort({ personaId: 1 });
+    return await Persona.find().sort({ position: 1 });
   } catch (error) {
     console.error("Error fetching personas:", error);
     throw error;
