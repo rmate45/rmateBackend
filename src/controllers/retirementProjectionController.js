@@ -132,11 +132,13 @@ exports.calculateProjection = async (req, res) => {
         yourSnapShot: recommendations["Your Snap Shot"],
         whatsShapingYourOutlook: recommendations["What's Shaping Your Outlook"],
         yourRetirementPaycheck: recommendations["Your Retirement Paycheck"],
-        otherSourcesOfRetirementIncome:
+        otherWaysToSupportYourRetirement:
           recommendations["Other Sources of Retirement Income"],
-        estimatedAnnualCostsInRetirement:
-          recommendations["Estimated Annual Costs in Retirement"],
+        whatYoureLikelyToSpendInRetirement:
+          recommendations["What You're Likely to Spend in Retirement"], // NEW
         howToStrengthenYourPlan: recommendations["How to Strengthen Your Plan"],
+        howRetireMateGuidesYouForward:
+          recommendations["How RetireMate Guides You Forward"], // NEW
         whatThisDoesntInclude:
           recommendations["What This Snapshot Doesn't Include (Yet)"],
       },
