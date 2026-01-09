@@ -868,8 +868,24 @@ const calculateRecommendations = async (
     const ssData = projectionData.find((item) => item.age === RETIRE_AGE);
     const SS_BENEFIT = ssData ? ssData.socialSecurity : 0;
 
-    // 5. Fixed growth rate at 5.5% as per Excel
+    // 5. Find withdrawal amount at retirement age (W67)
+    const withdrawalData = projectionData.find(
+      (item) => item.age === RETIRE_AGE
+    );
+    const W67 = withdrawalData ? Math.abs(withdrawalData.withdrawal || 0) : 0;
+
+    // 6. Fixed growth rate at 5.5% as per Excel
     const GROWTH_RATE = 5.5;
+
+    // Calculate Retirement Paycheck variables - USING CORRECT FORMULA FROM EXCEL TAB 2
+    const paycheckVariables = calculateRetirementPaycheckVariables(
+      SS_BENEFIT,
+      W67
+    );
+
+    // Calculate Annual Costs variables - USING CORRECT FORMULA FROM EXCEL TAB 2
+    const RP = paycheckVariables.RP; // Retirement Paycheck total
+    const annualCostsVariables = calculateAnnualCostsVariables(RP);
 
     // Calculate strengthening steps variables
     const strengtheningVariables = await calculateStrengtheningVariables(
@@ -880,18 +896,6 @@ const calculateRecommendations = async (
         CONTRIB_15_DOLLARS,
         CONTRIB_20_DOLLARS,
       }
-    );
-
-    // Calculate Retirement Paycheck variables
-    const paycheckVariables = calculateRetirementPaycheckVariables(
-      projectionData,
-      RETIRE_AGE
-    );
-
-    // Calculate Annual Costs variables (What You're Likely to Spend in Retirement)
-    const annualCostsVariables = calculateAnnualCostsVariables(
-      projectionData,
-      RETIRE_AGE
     );
 
     // Base recommendations object
@@ -918,7 +922,7 @@ const calculateRecommendations = async (
         `A long-term growth rate of ${GROWTH_RATE}% shapes how quickly your balance builds and how long it lasts.`,
       ].join("<br>"),
 
-      // Your Retirement Paycheck
+      // Your Retirement Paycheck - USING CORRECT CALCULATIONS
       "Your Retirement Paycheck": [
         `Your Retirement Paycheck represents the core income you can plan around in retirement—estimated at $${paycheckVariables.RETIREMENT_PAYCHECK_LOW}–$${paycheckVariables.RETIREMENT_PAYCHECK_HIGH} per year.`,
         `This includes predictable, recurring sources of income that form the baseline for your day-to-day spending.`,
@@ -929,7 +933,7 @@ const calculateRecommendations = async (
         `Keep in mind: some of your retirement paycheck may go toward federal and state taxes, depending on where you live.`,
       ].join("<br>"),
 
-      // Other Sources of Retirement Income (from "Other Ways to Support Your Retirement")
+      // Other Sources of Retirement Income
       "Other Sources of Retirement Income": [
         `These aren't part of your core retirement paycheck - but they're common ways people add flexibility and income in retirement.`,
         `Full/Part-time work: About 20% of seniors 65+ work part- or full-time to supplement retirement income.`,
@@ -940,7 +944,7 @@ const calculateRecommendations = async (
         `Whether any of these make sense depends on your goals, health, and lifestyle—and many people never use them at all.`,
       ].join("<br>"),
 
-      // What You're Likely to Spend in Retirement (NEW module)
+      // What You're Likely to Spend in Retirement - USING CORRECT CALCULATIONS
       "What You're Likely to Spend in Retirement": [
         `This estimate reflects what retirement may cost you each year based on lifestyle assumptions, healthcare expectations, and where you plan to live.`,
         `Understanding your expected spending helps put your income—and any gaps—into context.`,
@@ -954,10 +958,10 @@ const calculateRecommendations = async (
         `Spending in retirement varies widely, and many people adjust these categories over time as their priorities change.`,
       ].join("<br>"),
 
-      // How to Strengthen Your Plan
+      // How to Strengthen Your Plan - WITH CORRECT FORMATTING
       "How to Strengthen Your Plan": strengtheningVariables,
 
-      // How RetireMate Guides You Forward (NEW module)
+      // How RetireMate Guides You Forward
       "How RetireMate Guides You Forward": [
         `RetireMate is designed to help you move forward with clarity, not overwhelm.`,
         `Instead of giving you everything at once, it focuses on the next steps that matter most based on your situation.`,
@@ -1019,50 +1023,30 @@ const getLongevityMessage = (ageGroup, longevityBand, ageLow, ageHigh) => {
   );
 };
 
-// Calculate Retirement Paycheck variables
-const calculateRetirementPaycheckVariables = (
-  projectionData,
-  retirementAge
-) => {
+// Calculate Retirement Paycheck variables - CORRECTED AS PER EXCEL TAB 2
+const calculateRetirementPaycheckVariables = (SS67, W67) => {
   try {
-    const retirementAgeData = projectionData.find(
-      (item) => item.age === retirementAge
-    );
+    // RP = W67 + SS67 (Retirement Paycheck total)
+    const RP = SS67 + W67;
 
-    if (!retirementAgeData) {
-      return {
-        RETIREMENT_PAYCHECK_LOW: "0",
-        RETIREMENT_PAYCHECK_HIGH: "0",
-        Social_Security_X: "0",
-        Social_Security_Y: "0",
-        RIA_X: "0",
-        RIA_Y: "0",
-        Investment_X: "0",
-        Investment_Y: "0",
-      };
-    }
+    // Retirement Paycheck Range
+    const RETIREMENT_PAYCHECK_LOW = Math.round(RP * 0.95);
+    const RETIREMENT_PAYCHECK_HIGH = Math.round(RP * 1.1);
 
-    const socialSecurity = retirementAgeData.socialSecurity || 0;
-    const withdrawal = Math.abs(retirementAgeData.withdrawal || 0);
-    const income = retirementAgeData.householdIncome || 0;
+    // Social Security Range
+    const Social_Security_X = Math.round(SS67 * 0.95);
+    const Social_Security_Y = Math.round(SS67 * 1.1);
 
-    // Calculate as per Excel logic
-    const Social_Security_X = Math.round(socialSecurity * 0.85);
-    const Social_Security_Y = Math.round(socialSecurity * 1.15);
-
-    let withdrawalAmount = withdrawal;
-    if (withdrawalAmount <= 0 && income > 0 && socialSecurity > 0) {
-      withdrawalAmount = Math.max(0, income * 0.7 - socialSecurity);
-    }
-
-    const Investment_X = Math.round(withdrawalAmount * 0.7);
-    const Investment_Y = Math.round(withdrawalAmount * 0.8);
-    const RIA_X = Math.round(Investment_Y * 0.2);
-    const RIA_Y = Math.round(Investment_Y * 0.3);
+    // Withdrawal Allocation Breakdown
+    const RIA_X = Math.round(W67 * 0.3);
+    const RIA_Y = Math.round(W67 * 0.4);
+    const Investment_X = Math.round(W67 * 0.6);
+    const Investment_Y = Math.round(W67 * 0.7);
 
     return {
-      RETIREMENT_PAYCHECK_LOW: Investment_X.toLocaleString(),
-      RETIREMENT_PAYCHECK_HIGH: Investment_Y.toLocaleString(),
+      RP: RP,
+      RETIREMENT_PAYCHECK_LOW: RETIREMENT_PAYCHECK_LOW.toLocaleString(),
+      RETIREMENT_PAYCHECK_HIGH: RETIREMENT_PAYCHECK_HIGH.toLocaleString(),
       Social_Security_X: Social_Security_X.toLocaleString(),
       Social_Security_Y: Social_Security_Y.toLocaleString(),
       RIA_X: RIA_X.toLocaleString(),
@@ -1073,6 +1057,7 @@ const calculateRetirementPaycheckVariables = (
   } catch (error) {
     console.error("Error calculating retirement paycheck variables:", error);
     return {
+      RP: 0,
       RETIREMENT_PAYCHECK_LOW: "0",
       RETIREMENT_PAYCHECK_HIGH: "0",
       Social_Security_X: "0",
@@ -1085,43 +1070,21 @@ const calculateRetirementPaycheckVariables = (
   }
 };
 
-// Calculate Annual Costs variables
-const calculateAnnualCostsVariables = (projectionData, retirementAge) => {
+// Calculate Annual Costs variables - CORRECTED AS PER EXCEL TAB 2
+const calculateAnnualCostsVariables = (RP) => {
   try {
-    const ageData = projectionData.find((item) => item.age === retirementAge);
-
-    if (!ageData) {
-      return {
-        H1: "0",
-        H2: "0",
-        F1: "0",
-        F2: "0",
-        T1: "0",
-        T2: "0",
-        HC: "0",
-        E1: "0",
-        E2: "0",
-        O1: "0",
-        O2: "0",
-      };
-    }
-
-    const incomeAtRetirement = ageData.householdIncome || 0;
-    const income85 = incomeAtRetirement * 0.85;
-    const income115 = incomeAtRetirement * 1.15;
-
-    // Calculate as per Excel percentages
-    const H1 = Math.round(income85 * 0.357);
-    const H2 = Math.round(income115 * 0.357);
-    const F1 = Math.round(income85 * 0.128);
-    const F2 = Math.round(income115 * 0.128);
-    const T1 = Math.round(income85 * 0.15);
-    const T2 = Math.round(income115 * 0.15);
-    const HC = Math.round(incomeAtRetirement * 0.134);
-    const E1 = Math.round(income85 * 0.048);
-    const E2 = Math.round(income115 * 0.048);
-    const O1 = Math.round(income85 * 0.183);
-    const O2 = Math.round(income115 * 0.183);
+    // Calculate as per Excel Tab 2 percentages
+    const H1 = Math.round(RP * 0.3); // 30% of RP
+    const H2 = Math.round(RP * 0.4); // 40% of RP
+    const F1 = Math.round(RP * 0.08); // 8% of RP
+    const F2 = Math.round(RP * 0.18); // 18% of RP
+    const T1 = Math.round(RP * 0.1); // 10% of RP
+    const T2 = Math.round(RP * 0.2); // 20% of RP
+    const E1 = Math.round(RP * 0.02); // 2% of RP
+    const E2 = Math.round(RP * 0.09); // 9% of RP
+    const O1 = Math.round(RP * 0.12); // 12% of RP
+    const O2 = Math.round(RP * 0.23); // 23% of RP
+    const HC = Math.round(RP * 0.13); // 13% of RP
 
     return {
       H1: H1.toLocaleString(),
@@ -1130,11 +1093,11 @@ const calculateAnnualCostsVariables = (projectionData, retirementAge) => {
       F2: F2.toLocaleString(),
       T1: T1.toLocaleString(),
       T2: T2.toLocaleString(),
-      HC: HC.toLocaleString(),
       E1: E1.toLocaleString(),
       E2: E2.toLocaleString(),
       O1: O1.toLocaleString(),
       O2: O2.toLocaleString(),
+      HC: HC.toLocaleString(),
     };
   } catch (error) {
     console.error("Error calculating annual costs variables:", error);
@@ -1145,16 +1108,16 @@ const calculateAnnualCostsVariables = (projectionData, retirementAge) => {
       F2: "0",
       T1: "0",
       T2: "0",
-      HC: "0",
       E1: "0",
       E2: "0",
       O1: "0",
       O2: "0",
+      HC: "0",
     };
   }
 };
 
-// Calculate Strengthening Variables
+// Calculate Strengthening Variables - WITH CORRECT FORMATTING
 const calculateStrengtheningVariables = async (
   userData,
   projectionData,
@@ -1162,7 +1125,6 @@ const calculateStrengtheningVariables = async (
   contributionData
 ) => {
   try {
-    const { householdIncome } = userData;
     const { CONTRIB_15_DOLLARS, CONTRIB_20_DOLLARS } = contributionData;
 
     // These should come from your actual calculations - using placeholders
@@ -1181,40 +1143,28 @@ const calculateStrengtheningVariables = async (
     const YEARS_LOCATION_LOW = 2;
     const YEARS_LOCATION_HIGH = 5;
 
+    // Format as per your screenshot - each point and its description on same line with line break
     return [
-      `The options below show how different changes could extend how long your savings last.`,
-      `Each one stands on its own, and the impact will vary depending on which changes you choose and how they're combined.`,
-      `1. Increase your monthly contribution to 15%-20% ($${CONTRIB_15_DOLLARS}–$${CONTRIB_20_DOLLARS}/mo): +${YEARS_15}-${YEARS_20} years`,
-      `A higher contribution rate compounds over time and meaningfully extends how long your balance lasts.`,
-      `2. Delay collecting Social Security 1–3 years (start at age 68-70): +${YEARS_SS_DELAY_LOW}-${YEARS_SS_DELAY_HIGH} years`,
-      `Delaying increases your monthly benefit by up to 24%, reducing the amount you need to withdraw each year.`,
-      `3. Shift your transition away from full-time work by ${WORK_SHIFT_RANGE} years: +${YEARS_WORK_SHIFT_LOW}-${YEARS_WORK_SHIFT_HIGH} years`,
-      `Each additional working year adds income and shortens the withdrawal period, buying you more retirement time.`,
-      `4. Improve your long-term growth rate to 7.5%–9%: +${YEARS_GROWTH_LOW}-${YEARS_GROWTH_HIGH} years`,
-      `Higher long-term returns can significantly increase your peak savings and slow down future drawdowns.`,
-      `5. Reduce long-term costs by ${COST_REDUCTION_TARGET}: +${YEARS_COST_REDUCTION_LOW}-${YEARS_COST_REDUCTION_HIGH} years`,
-      `Lower ongoing expenses decrease annual withdrawals and help your savings last longer.`,
-      `6. Explore location flexibility: +${YEARS_LOCATION_LOW}-${YEARS_LOCATION_HIGH} years`,
-      `Living in a lower-cost area reduces required withdrawals and stretches both Social Security and savings.`,
+      `The options below show how different changes could extend how long your savings last.<br><br>`,
+      `Each one stands on its own, and the impact will vary depending on which changes you choose and how they're combined.<br><br>`,
+      `1. Increase your monthly contribution to 15%-20% ($${CONTRIB_15_DOLLARS}–$${CONTRIB_20_DOLLARS}/mo): +${YEARS_15}-${YEARS_20} years<br>`,
+      `A higher contribution rate compounds over time and meaningfully extends how long your balance lasts.<br><br>`,
+      `2. Delay collecting Social Security 1–3 years (start at age 68-70): +${YEARS_SS_DELAY_LOW}-${YEARS_SS_DELAY_HIGH} years<br>`,
+      `Delaying increases your monthly benefit by up to 24%, reducing the amount you need to withdraw each year.<br><br>`,
+      `3. Shift your transition away from full-time work by ${WORK_SHIFT_RANGE} years: +${YEARS_WORK_SHIFT_LOW}-${YEARS_WORK_SHIFT_HIGH} years<br>`,
+      `Each additional working year adds income and shortens the withdrawal period, buying you more retirement time.<br><br>`,
+      `4. Improve your long-term growth rate to 7.5%–9%: +${YEARS_GROWTH_LOW}-${YEARS_GROWTH_HIGH} years<br>`,
+      `Higher long-term returns can significantly increase your peak savings and slow down future drawdowns.<br><br>`,
+      `5. Reduce long-term costs by ${COST_REDUCTION_TARGET}: +${YEARS_COST_REDUCTION_LOW}-${YEARS_COST_REDUCTION_HIGH} years<br>`,
+      `Lower ongoing expenses decrease annual withdrawals and help your savings last longer.<br><br>`,
+      `6. Explore location flexibility: +${YEARS_LOCATION_LOW}-${YEARS_LOCATION_HIGH} years<br>`,
+      `Living in a lower-cost area reduces required withdrawals and stretches both Social Security and savings.<br><br>`,
       `You don't need to do everything—many people see meaningful improvements by focusing on just one or two changes that fit their life right now.`,
-    ].join("<br>");
+    ].join("");
   } catch (error) {
     console.error("Error calculating strengthening variables:", error);
     return "Unable to calculate strengthening steps.";
   }
-};
-
-// Get Other Income Sources (static)
-const getOtherIncomeSources = () => {
-  return [
-    `These aren't part of your core retirement paycheck - but they're common ways people add flexibility and income in retirement.`,
-    `Full/Part-time work: About 20% of seniors 65+ work part- or full-time to supplement retirement income.`,
-    `Annuities: Products designed to convert savings into steady, lifelong monthly income.`,
-    `Whole Life Insurance: Permanent insurance that provides lifelong coverage and may build cash value you can access.`,
-    `Tangible Assets: Physical items—such as real estate, gold, or collectibles—that may hold value or generate income.`,
-    `Reverse Mortgage: A potential option for homeowners 62+ to access home equity as cash or income while remaining in their home.`,
-    `Whether any of these make sense depends on your goals, health, and lifestyle—and many people never use them at all.`,
-  ].join("<br>");
 };
 
 module.exports = {
