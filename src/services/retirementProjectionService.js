@@ -866,13 +866,43 @@ const calculateRecommendations = async (
 
     // 4. Find Social Security data at retirement age
     const ssData = projectionData.find((item) => item.age === RETIRE_AGE);
-    const SS_BENEFIT = ssData ? ssData.socialSecurity : 0;
+    const SS_BENEFIT = ssData ? Math.abs(ssData.socialSecurity || 0) : 0;
 
-    // 5. Find withdrawal amount at retirement age (W67)
+    // 5. Find withdrawal amount at retirement age (W67) - FIXED
+    // Look for withdrawal or calculate from savings change if withdrawal is 0
     const withdrawalData = projectionData.find(
       (item) => item.age === RETIRE_AGE
     );
-    const W67 = withdrawalData ? Math.abs(withdrawalData.withdrawal || 0) : 0;
+    let W67 = 0;
+
+    if (withdrawalData) {
+      // Try to get withdrawal directly
+      W67 = Math.abs(withdrawalData.withdrawal || 0);
+
+      // If withdrawal is 0, try to calculate it from savings change
+      if (W67 === 0) {
+        // Find the year before retirement
+        const preRetirementData = projectionData.find(
+          (item) => item.age === RETIRE_AGE - 1
+        );
+
+        if (preRetirementData && withdrawalData.savings > 0) {
+          // Calculate withdrawal as 4% of savings (common retirement withdrawal rate)
+          W67 = Math.round(preRetirementData.savings * 0.04);
+        }
+      }
+
+      // Ensure minimum withdrawal if still 0
+      if (W67 === 0 && SS_BENEFIT > 0) {
+        // Calculate as 70% of income minus social security
+        const incomeAtRetirement = withdrawalData.householdIncome || 0;
+        W67 = Math.max(0, Math.round(incomeAtRetirement * 0.7 - SS_BENEFIT));
+      }
+    }
+
+    console.log("DEBUG - Retirement Age:", RETIRE_AGE);
+    console.log("DEBUG - SS_BENEFIT:", SS_BENEFIT);
+    console.log("DEBUG - W67:", W67);
 
     // 6. Fixed growth rate at 5.5% as per Excel
     const GROWTH_RATE = 5.5;
@@ -882,6 +912,8 @@ const calculateRecommendations = async (
       SS_BENEFIT,
       W67
     );
+
+    console.log("DEBUG - Paycheck Variables:", paycheckVariables);
 
     // Calculate Annual Costs variables - USING CORRECT FORMULA FROM EXCEL TAB 2
     const RP = paycheckVariables.RP; // Retirement Paycheck total
@@ -1026,6 +1058,13 @@ const getLongevityMessage = (ageGroup, longevityBand, ageLow, ageHigh) => {
 // Calculate Retirement Paycheck variables - CORRECTED AS PER EXCEL TAB 2
 const calculateRetirementPaycheckVariables = (SS67, W67) => {
   try {
+    console.log(
+      "DEBUG - calculateRetirementPaycheckVariables - SS67:",
+      SS67,
+      "W67:",
+      W67
+    );
+
     // RP = W67 + SS67 (Retirement Paycheck total)
     const RP = SS67 + W67;
 
@@ -1043,7 +1082,7 @@ const calculateRetirementPaycheckVariables = (SS67, W67) => {
     const Investment_X = Math.round(W67 * 0.6);
     const Investment_Y = Math.round(W67 * 0.7);
 
-    return {
+    const result = {
       RP: RP,
       RETIREMENT_PAYCHECK_LOW: RETIREMENT_PAYCHECK_LOW.toLocaleString(),
       RETIREMENT_PAYCHECK_HIGH: RETIREMENT_PAYCHECK_HIGH.toLocaleString(),
@@ -1054,6 +1093,9 @@ const calculateRetirementPaycheckVariables = (SS67, W67) => {
       Investment_X: Investment_X.toLocaleString(),
       Investment_Y: Investment_Y.toLocaleString(),
     };
+
+    console.log("DEBUG - calculateRetirementPaycheckVariables result:", result);
+    return result;
   } catch (error) {
     console.error("Error calculating retirement paycheck variables:", error);
     return {
@@ -1147,15 +1189,15 @@ const calculateStrengtheningVariables = async (
     return [
       `The options below show how different changes could extend how long your savings last.<br><br>`,
       `Each one stands on its own, and the impact will vary depending on which changes you choose and how they're combined.<br><br>`,
-      `1. Increase your monthly contribution to 15%-20% ($${CONTRIB_15_DOLLARS}–$${CONTRIB_20_DOLLARS}/mo): +${YEARS_15}-${YEARS_20} years<br>`,
+      `1. Increase your monthly contribution to 15%-20% ($${CONTRIB_15_DOLLARS}–$${CONTRIB_20_DOLLARS}/mo): +${YEARS_15}-${YEARS_20} years\n`,
       `A higher contribution rate compounds over time and meaningfully extends how long your balance lasts.<br><br>`,
-      `2. Delay collecting Social Security 1–3 years (start at age 68-70): +${YEARS_SS_DELAY_LOW}-${YEARS_SS_DELAY_HIGH} years<br>`,
+      `2. Delay collecting Social Security 1–3 years (start at age 68-70): +${YEARS_SS_DELAY_LOW}-${YEARS_SS_DELAY_HIGH} years\n`,
       `Delaying increases your monthly benefit by up to 24%, reducing the amount you need to withdraw each year.<br><br>`,
-      `3. Shift your transition away from full-time work by ${WORK_SHIFT_RANGE} years: +${YEARS_WORK_SHIFT_LOW}-${YEARS_WORK_SHIFT_HIGH} years<br>`,
+      `3. Shift your transition away from full-time work by ${WORK_SHIFT_RANGE} years: +${YEARS_WORK_SHIFT_LOW}-${YEARS_WORK_SHIFT_HIGH} years\n`,
       `Each additional working year adds income and shortens the withdrawal period, buying you more retirement time.<br><br>`,
-      `4. Improve your long-term growth rate to 7.5%–9%: +${YEARS_GROWTH_LOW}-${YEARS_GROWTH_HIGH} years<br>`,
+      `4. Improve your long-term growth rate to 7.5%–9%: +${YEARS_GROWTH_LOW}-${YEARS_GROWTH_HIGH} years\n`,
       `Higher long-term returns can significantly increase your peak savings and slow down future drawdowns.<br><br>`,
-      `5. Reduce long-term costs by ${COST_REDUCTION_TARGET}: +${YEARS_COST_REDUCTION_LOW}-${YEARS_COST_REDUCTION_HIGH} years<br>`,
+      `5. Reduce long-term costs by ${COST_REDUCTION_TARGET}: +${YEARS_COST_REDUCTION_LOW}-${YEARS_COST_REDUCTION_HIGH} years\n`,
       `Lower ongoing expenses decrease annual withdrawals and help your savings last longer.<br><br>`,
       `6. Explore location flexibility: +${YEARS_LOCATION_LOW}-${YEARS_LOCATION_HIGH} years<br>`,
       `Living in a lower-cost area reduces required withdrawals and stretches both Social Security and savings.<br><br>`,
