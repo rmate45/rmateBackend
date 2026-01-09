@@ -17,9 +17,9 @@ exports.saveResponse = async (req, res) => {
   try {
     const { phoneNumber, responses } = req.body;
 
-    if (!phoneNumber) {
-      return res.status(400).json(errorResponse("Phone number is required"));
-    }
+    // if (!phoneNumber) {
+    //   return res.status(400).json(errorResponse("Phone number is required"));
+    // }
 
     if (!responses || !Array.isArray(responses)) {
       return res.status(400).json(errorResponse("Responses array is required"));
