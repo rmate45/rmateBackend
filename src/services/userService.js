@@ -10,11 +10,11 @@ const CONFIG = {
   requiredQuestions: ["Q1", "Q2", "Q3"], // Minimum questions to consider complete
   metadataMappings: {
     // Define which questions should be extracted to metadata for easy querying
-    Q1: "name",
-    Q3: "age",
-    Q7: "zipCode",
-    Q9: "annualIncome",
-    Q10: "retirementSavings",
+    Q1: "age",
+    // Q3: "age",
+    Q7: "email",
+    // Q9: "annualIncome",
+    // Q10: "retirementSavings",
   },
 };
 
