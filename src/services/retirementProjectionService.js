@@ -959,9 +959,11 @@ const calculateRecommendations = async (
         `Your Retirement Paycheck represents the core income you can plan around in retirement—estimated at $${paycheckVariables.RETIREMENT_PAYCHECK_LOW}–$${paycheckVariables.RETIREMENT_PAYCHECK_HIGH} per year.`,
         `This includes predictable, recurring sources of income that form the baseline for your day-to-day spending.`,
         `Social Security: You may receive about $${paycheckVariables.Social_Security_X} - $${paycheckVariables.Social_Security_Y} per year.`,
-        `Retirement Accounts: You can withdraw approximately $${paycheckVariables.RIA_X} - $${paycheckVariables.RIA_Y} per year from your retirement accounts.\n
-         Investment Accounts: You can withdraw approximately $${paycheckVariables.Investment_X} - $${paycheckVariables.Investment_Y} per year from your investment accounts.`,
-        `Using both retirement and investment accounts can help manage taxes over time and give your money more room to grow.`,
+        `Retirement Accounts & Investment Accounts: You can withdraw approximately $${
+          paycheckVariables.RIA_X + paycheckVariables.Investment_X
+        } - $${
+          paycheckVariables.RIA_Y + paycheckVariables.Investment_Y
+        } per year from your retirement and investment accounts.``Using both retirement and investment accounts can help manage taxes over time and give your money more room to grow.`,
         `Keep in mind: some of your retirement paycheck may go toward federal and state taxes, depending on where you live.`,
       ].join("<br>"),
 
