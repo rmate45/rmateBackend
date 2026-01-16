@@ -963,7 +963,8 @@ const calculateRecommendations = async (
           paycheckVariables.RIA_X + paycheckVariables.Investment_X
         } - $${
           paycheckVariables.RIA_Y + paycheckVariables.Investment_Y
-        } per year from your retirement and investment accounts.``Using both retirement and investment accounts can help manage taxes over time and give your money more room to grow.`,
+        } per year from your retirement and investment accounts.`,
+        `Using both retirement and investment accounts can help manage taxes over time and give your money more room to grow.`,
         `Keep in mind: some of your retirement paycheck may go toward federal and state taxes, depending on where you live.`,
       ].join("<br>"),
 
