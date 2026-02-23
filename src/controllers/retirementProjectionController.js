@@ -87,8 +87,8 @@ exports.calculateProjection = async (req, res) => {
         .status(400)
         .json(
           errorResponse(
-            "Age, householdIncome, and retirementSavings are required"
-          )
+            "Age, householdIncome, and retirementSavings are required",
+          ),
         );
     }
 
@@ -112,15 +112,14 @@ exports.calculateProjection = async (req, res) => {
     };
 
     // Calculate projection
-    const result = await projectionService.calculateRetirementProjection(
-      userData
-    );
+    const result =
+      await projectionService.calculateRetirementProjection(userData);
 
     // Calculate recommendations
     const recommendations = await projectionService.calculateRecommendations(
       result.data,
       userData,
-      result.summary
+      result.summary,
     );
 
     // Add recommendations to the response
@@ -133,12 +132,12 @@ exports.calculateProjection = async (req, res) => {
         whatsShapingYourOutlook: recommendations["What's Shaping Your Outlook"],
         yourRetirementPaycheck: recommendations["Your Retirement Paycheck"],
         otherWaysToSupportYourRetirement:
-          recommendations["Other Sources of Retirement Income"],
+          recommendations["Other Ways to Support Your Retirement"], // CHANGED KEY NAME
         whatYoureLikelyToSpendInRetirement:
-          recommendations["What You're Likely to Spend in Retirement"], // NEW
+          recommendations["What You're Likely to Spend in Retirement"],
         howToStrengthenYourPlan: recommendations["How to Strengthen Your Plan"],
         howRetireMateGuidesYouForward:
-          recommendations["How RetireMate Guides You Forward"], // NEW
+          recommendations["How RetireMate Guides You Forward"],
         whatThisDoesntInclude:
           recommendations["What This Snapshot Doesn't Include (Yet)"],
       },
@@ -149,8 +148,8 @@ exports.calculateProjection = async (req, res) => {
       .json(
         successResponse(
           "Retirement projection calculated successfully",
-          enhancedResult
-        )
+          enhancedResult,
+        ),
       );
   } catch (error) {
     console.error("ERROR::", error);
@@ -166,8 +165,8 @@ exports.calculateProjection = async (req, res) => {
       .json(
         errorResponse(
           "Failed to calculate retirement projection",
-          error.message
-        )
+          error.message,
+        ),
       );
   }
 };
