@@ -257,13 +257,13 @@ const calculateRetirementProjection = async (userData) => {
         currentAge,
         householdIncome,
         INFLATION_RATE,
-        RETIREMENT_AGE
+        RETIREMENT_AGE,
       );
 
       hypotheticalIncomeVector = calculateHypotheticalIncomeVector(
         householdIncomeVector,
         INFLATION_RATE,
-        LIFE_EXPECTANCY
+        LIFE_EXPECTANCY,
       );
 
       socialSecurityVector = [];
@@ -277,12 +277,12 @@ const calculateRetirementProjection = async (userData) => {
 
       fundingNeedsVector = calculateFundingNeedsVector(
         hypotheticalIncomeVector,
-        COMFORT_RATE
+        COMFORT_RATE,
       );
 
       contributionVector = calculateContributionVector(
         householdIncomeVector,
-        CONTRIBUTION_RATE
+        CONTRIBUTION_RATE,
       );
     }
 
@@ -296,7 +296,7 @@ const calculateRetirementProjection = async (userData) => {
       PRE_RETIREMENT_GROWTH_RATE,
       POST_RETIREMENT_GROWTH_RATE,
       RETIREMENT_AGE,
-      LIFE_EXPECTANCY
+      LIFE_EXPECTANCY,
     );
 
     // Prepare projection data for response
@@ -319,23 +319,23 @@ const calculateRetirementProjection = async (userData) => {
         // FOR 67+: Use spreadsheet-based values
         if (postRetirementIndex < socialSecurityVector.length) {
           displaySocialSecurity = Math.round(
-            socialSecurityVector[postRetirementIndex] || 0
+            socialSecurityVector[postRetirementIndex] || 0,
           );
         }
         if (postRetirementIndex < fundingNeedsVector.length) {
           displayFundingNeed = Math.round(
-            fundingNeedsVector[postRetirementIndex] || 0
+            fundingNeedsVector[postRetirementIndex] || 0,
           );
         }
         displayWithdrawal = Math.max(
           0,
-          displayFundingNeed - displaySocialSecurity
+          displayFundingNeed - displaySocialSecurity,
         );
 
         // For 67+, household income is the hypothetical income (Lifestyle Need / Comfort Rate)
         if (postRetirementIndex < fundingNeedsVector.length) {
           displayHouseholdIncome = Math.round(
-            fundingNeedsVector[postRetirementIndex] / COMFORT_RATE
+            fundingNeedsVector[postRetirementIndex] / COMFORT_RATE,
           );
         }
       } else {
@@ -343,20 +343,20 @@ const calculateRetirementProjection = async (userData) => {
         if (isPreRetirement || isRetirementAge) {
           if (preRetirementIndex < householdIncomeVector.length) {
             displayHouseholdIncome = Math.round(
-              householdIncomeVector[preRetirementIndex] || 0
+              householdIncomeVector[preRetirementIndex] || 0,
             );
           }
         } else {
           if (postRetirementIndex < hypotheticalIncomeVector.length) {
             displayHouseholdIncome = Math.round(
-              hypotheticalIncomeVector[postRetirementIndex] || 0
+              hypotheticalIncomeVector[postRetirementIndex] || 0,
             );
           }
         }
 
         if (isPreRetirement && preRetirementIndex < contributionVector.length) {
           displayContribution = Math.round(
-            contributionVector[preRetirementIndex] || 0
+            contributionVector[preRetirementIndex] || 0,
           );
         }
 
@@ -366,14 +366,14 @@ const calculateRetirementProjection = async (userData) => {
           postRetirementIndex < fundingNeedsVector.length
         ) {
           displaySocialSecurity = Math.round(
-            socialSecurityVector[postRetirementIndex] || 0
+            socialSecurityVector[postRetirementIndex] || 0,
           );
           displayFundingNeed = Math.round(
-            fundingNeedsVector[postRetirementIndex] || 0
+            fundingNeedsVector[postRetirementIndex] || 0,
           );
           displayWithdrawal = Math.max(
             0,
-            Math.round(displayFundingNeed - displaySocialSecurity)
+            Math.round(displayFundingNeed - displaySocialSecurity),
           );
         }
       }
@@ -398,7 +398,7 @@ const calculateRetirementProjection = async (userData) => {
 
     const graphData = prepareGraphData(
       projectionData,
-      currentAge >= RETIREMENT_AGE
+      currentAge >= RETIREMENT_AGE,
     );
 
     return {
@@ -409,7 +409,7 @@ const calculateRetirementProjection = async (userData) => {
         projectionData,
         currentAge,
         householdIncome,
-        retirementSavings + otherSavings
+        retirementSavings + otherSavings,
       ),
     };
   } catch (error) {
@@ -422,7 +422,7 @@ const calculateSocialSecurityVectorFor67Plus = (
   householdIncome,
   growthRate,
   retirementAge,
-  lifeExpectancy
+  lifeExpectancy,
 ) => {
   const vector = [];
 
@@ -450,7 +450,7 @@ const calculateHouseholdIncomeVector = (
   currentAge,
   householdIncome,
   inflationRate,
-  retirementAge
+  retirementAge,
 ) => {
   const vector = [];
   if (currentAge >= retirementAge) {
@@ -469,7 +469,7 @@ const calculateHouseholdIncomeVector = (
 const calculateHypotheticalIncomeVector = (
   householdIncomeVector,
   inflationRate,
-  lifeExpectancy
+  lifeExpectancy,
 ) => {
   const vector = [];
   const lastIncome = householdIncomeVector[householdIncomeVector.length - 1];
@@ -488,7 +488,7 @@ const calculateSocialSecurityVector = (
   currentAge,
   householdIncome,
   growthRate,
-  lifeExpectancy
+  lifeExpectancy,
 ) => {
   const vector = [];
   const monthlyIncome = householdIncome / 12;
@@ -515,7 +515,7 @@ const calculateFundingNeedsVector = (hypotheticalIncomeVector, comfortRate) => {
 // Calculate contribution vector (pre-retirement savings)
 const calculateContributionVector = (
   householdIncomeVector,
-  contributionRate
+  contributionRate,
 ) => {
   if (householdIncomeVector.length === 0) {
     return [];
@@ -533,7 +533,7 @@ const calculateSavingsProjection = (
   preRetirementGrowthRate,
   postRetirementGrowthRate,
   retirementAge,
-  lifeExpectancy
+  lifeExpectancy,
 ) => {
   const savings = [initialSavings];
   const growth = [0];
@@ -746,16 +746,16 @@ const generateSummary = async (
   projectionData,
   currentAge,
   householdIncome,
-  totalSavings
+  totalSavings,
 ) => {
   const retirementAge = 67;
   const peakSavings = Math.max(...projectionData.map((item) => item.savings));
   const peakSavingsAge = projectionData.find(
-    (item) => item.savings === peakSavings
+    (item) => item.savings === peakSavings,
   ).age;
 
   const depletionData = projectionData.find(
-    (item) => item.savings <= 0 && item.phase === "post_retirement"
+    (item) => item.savings <= 0 && item.phase === "post_retirement",
   );
   const depletionAge = depletionData ? depletionData.age : "Never";
 
@@ -785,14 +785,14 @@ const generateSummary = async (
 const calculateRecommendations = async (
   projectionData,
   userData,
-  originalScenario
+  originalScenario,
 ) => {
   try {
     const { age, householdIncome, retirementSavings, otherSavings } = userData;
 
     // Find Age_LAST - when savings become negative in post-retirement
     const depletionData = projectionData.find(
-      (item) => item.savings <= 0 && item.phase === "post_retirement"
+      (item) => item.savings <= 0 && item.phase === "post_retirement",
     );
     const Age_LAST = depletionData ? depletionData.age : null;
 
@@ -828,20 +828,20 @@ const calculateRecommendations = async (
       ageGroup,
       longevityBand,
       LONGEVITY_LOW,
-      LONGEVITY_HIGH
+      LONGEVITY_HIGH,
     );
 
     // EXTRACT ACTUAL VALUES FROM PROJECTION DATA
 
     // 1. Find retirement age
     const retirementEntry = projectionData.find(
-      (item) => item.phase === "post_retirement"
+      (item) => item.phase === "post_retirement",
     );
     const RETIRE_AGE = retirementEntry ? retirementEntry.age : 67;
 
     // 2. Find peak savings
     const PEAK_SAVINGS = Math.max(
-      ...projectionData.map((item) => item.savings || 0)
+      ...projectionData.map((item) => item.savings || 0),
     );
 
     // 3. Find current age data
@@ -852,7 +852,7 @@ const calculateRecommendations = async (
     let CONTRIB_DOLLARS = 0;
     if (currentYearData && currentYearData.householdIncome > 0) {
       currentContributionRate = Math.round(
-        (currentYearData.contribution / currentYearData.householdIncome) * 100
+        (currentYearData.contribution / currentYearData.householdIncome) * 100,
       );
       CONTRIB_DOLLARS = Math.round(currentYearData.contribution / 12);
     } else {
@@ -871,7 +871,7 @@ const calculateRecommendations = async (
     // 5. Find withdrawal amount at retirement age (W67) - FIXED
     // Look for withdrawal or calculate from savings change if withdrawal is 0
     const withdrawalData = projectionData.find(
-      (item) => item.age === RETIRE_AGE
+      (item) => item.age === RETIRE_AGE,
     );
     let W67 = 0;
 
@@ -883,7 +883,7 @@ const calculateRecommendations = async (
       if (W67 === 0) {
         // Find the year before retirement
         const preRetirementData = projectionData.find(
-          (item) => item.age === RETIRE_AGE - 1
+          (item) => item.age === RETIRE_AGE - 1,
         );
 
         if (preRetirementData && withdrawalData.savings > 0) {
@@ -910,7 +910,7 @@ const calculateRecommendations = async (
     // Calculate Retirement Paycheck variables - USING CORRECT FORMULA FROM EXCEL TAB 2
     const paycheckVariables = calculateRetirementPaycheckVariables(
       SS_BENEFIT,
-      W67
+      W67,
     );
 
     console.log("DEBUG - Paycheck Variables:", paycheckVariables);
@@ -927,7 +927,7 @@ const calculateRecommendations = async (
       {
         CONTRIB_15_DOLLARS,
         CONTRIB_20_DOLLARS,
-      }
+      },
     );
 
     // Base recommendations object
@@ -944,38 +944,30 @@ const calculateRecommendations = async (
 
       // What's Shaping Your Outlook
       "What's Shaping Your Outlook": [
-        `Your contributions of 10% ($${CONTRIB_DOLLARS}/mo) help your savings grow to about $${Math.round(
-          PEAK_SAVINGS
-        ).toLocaleString()} before retirement.`,
+        `Your contributions of 10% ($${(CONTRIB_DOLLARS / 1000).toFixed(1)}K/mo) help your savings grow to about $${Math.round(PEAK_SAVINGS / 1000000).toFixed(1)}M before retirement.`,
         `Retiring around age ${RETIRE_AGE} sets the point where saving stops and withdrawals begin.`,
-        `Starting Social Security at 67 provides roughly $${Math.round(
-          SS_BENEFIT
-        ).toLocaleString()}/yr, reducing how much you need to withdraw.`,
+        `Starting Social Security at 67 provides roughly $${Math.round(SS_BENEFIT / 1000)}K/yr, reducing how much you need to withdraw.`,
         `A long-term growth rate of ${GROWTH_RATE}% shapes how quickly your balance builds and how long it lasts.`,
       ].join("<br>"),
 
-      // Your Retirement Paycheck - USING CORRECT CALCULATIONS
+      // Your Retirement Paycheck - WITH ALL UPDATES (Point 2, 2a, 2b, 2c)
       "Your Retirement Paycheck": [
-        `Your Retirement Paycheck represents the core income you can plan around in retirement—estimated at $${paycheckVariables.RETIREMENT_PAYCHECK_LOW}–$${paycheckVariables.RETIREMENT_PAYCHECK_HIGH} per year.`,
+        `Your Retirement Paycheck represents the core income you can plan around in retirement—estimated at $${Math.round(parseInt(paycheckVariables.RETIREMENT_PAYCHECK_LOW.replace(/,/g, "")) / 1000)}K–$${Math.round(parseInt(paycheckVariables.RETIREMENT_PAYCHECK_HIGH.replace(/,/g, "")) / 1000)}K per year.`,
         `This includes predictable, recurring sources of income that form the baseline for your day-to-day spending.`,
-        `Social Security: You may receive about $${paycheckVariables.Social_Security_X} - $${paycheckVariables.Social_Security_Y} per year.`,
-        `Retirement Accounts & Investment Accounts: You can withdraw approximately $${
-          paycheckVariables.RIA_X + paycheckVariables.Investment_X
-        } - $${
-          paycheckVariables.RIA_Y + paycheckVariables.Investment_Y
-        } per year from your retirement and investment accounts.`,
+        `<strong>Social Security:</strong> You may receive about $${Math.round(parseInt(paycheckVariables.Social_Security_X.replace(/,/g, "")) / 1000)}K–$${Math.round(parseInt(paycheckVariables.Social_Security_Y.replace(/,/g, "")) / 1000)}K per year.`,
+        `<strong>Retirement Accounts & Investment Accounts:</strong> You can withdraw approximately $${Math.round((parseInt(paycheckVariables.RIA_X.replace(/,/g, "")) + parseInt(paycheckVariables.Investment_X.replace(/,/g, ""))) / 1000)}K–$${Math.round((parseInt(paycheckVariables.RIA_Y.replace(/,/g, "")) + parseInt(paycheckVariables.Investment_Y.replace(/,/g, ""))) / 1000)}K per year from your retirement and investment accounts.`,
         `Using both retirement and investment accounts can help manage taxes over time and give your money more room to grow.`,
         `Keep in mind: some of your retirement paycheck may go toward federal and state taxes, depending on where you live.`,
       ].join("<br>"),
 
       // Other Sources of Retirement Income
-      "Other Sources of Retirement Income": [
+      "Other Ways to Support Your Retirement": [
         `These aren't part of your core retirement paycheck - but they're common ways people add flexibility and income in retirement.`,
-        `Full/Part-time work: About 20% of seniors 65+ work part- or full-time to supplement retirement income.`,
-        `Annuities: Products designed to convert savings into steady, lifelong monthly income.`,
-        `Whole Life Insurance: Permanent insurance that provides lifelong coverage and may build cash value you can access.`,
-        `Tangible Assets: Physical items—such as real estate, gold, or collectibles—that may hold value or generate income.`,
-        `Reverse Mortgage: A potential option for homeowners 62+ to access home equity as cash or income while remaining in their home.`,
+        `<strong>Full/Part-time work:</strong> About 20% of seniors 65+ work part- or full-time to supplement retirement income.`,
+        `<strong>Annuities:</strong> Products designed to convert savings into steady, lifelong monthly income.`,
+        `<strong>Whole Life Insurance:</strong> Permanent insurance that provides lifelong coverage and may build cash value you can access.`,
+        `<strong>Tangible Assets:</strong> Physical items—such as real estate, gold, or collectibles—that may hold value or generate income.`,
+        `<strong>Reverse Mortgage:</strong> A potential option for homeowners 62+ to access home equity as cash or income while remaining in their home.`,
         `Whether any of these make sense depends on your goals, health, and lifestyle—and many people never use them at all.`,
       ].join("<br>"),
 
@@ -984,12 +976,12 @@ const calculateRecommendations = async (
         `This estimate reflects what retirement may cost you each year based on lifestyle assumptions, healthcare expectations, and where you plan to live.`,
         `Understanding your expected spending helps put your income—and any gaps—into context.`,
         `These ranges reflect typical annual spending patterns for households like yours—your actual costs may be higher or lower.`,
-        `Housing: $${annualCostsVariables.H1} - $${annualCostsVariables.H2}`,
-        `Food & Groceries: $${annualCostsVariables.F1} - $${annualCostsVariables.F2}`,
-        `Transportation: $${annualCostsVariables.T1} - $${annualCostsVariables.T2}`,
-        `Healthcare: approximately $${annualCostsVariables.HC}`,
-        `Entertainment & Travel: $${annualCostsVariables.E1} - $${annualCostsVariables.E2}`,
-        `Other Everyday Expenses: $${annualCostsVariables.O1} - $${annualCostsVariables.O2}`,
+        `<strong>Housing:</strong> $${Math.round(parseInt(annualCostsVariables.H1.replace(/,/g, "")) / 1000)}K – $${Math.round(parseInt(annualCostsVariables.H2.replace(/,/g, "")) / 1000)}K`,
+        `<strong>Food & Groceries:</strong> $${Math.round(parseInt(annualCostsVariables.F1.replace(/,/g, "")) / 1000)}K – $${Math.round(parseInt(annualCostsVariables.F2.replace(/,/g, "")) / 1000)}K`,
+        `<strong>Transportation:</strong> $${Math.round(parseInt(annualCostsVariables.T1.replace(/,/g, "")) / 1000)}K – $${Math.round(parseInt(annualCostsVariables.T2.replace(/,/g, "")) / 1000)}K`,
+        `<strong>Healthcare:</strong> approximately $${Math.round(parseInt(annualCostsVariables.HC.replace(/,/g, "")) / 1000)}K`,
+        `<strong>Entertainment & Travel:</strong> $${Math.round(parseInt(annualCostsVariables.E1.replace(/,/g, "")) / 1000)}K – $${Math.round(parseInt(annualCostsVariables.E2.replace(/,/g, "")) / 1000)}K`,
+        `<strong>Other Everyday Expenses:</strong> $${Math.round(parseInt(annualCostsVariables.O1.replace(/,/g, "")) / 1000)}K – $${Math.round(parseInt(annualCostsVariables.O2.replace(/,/g, "")) / 1000)}K`,
         `Spending in retirement varies widely, and many people adjust these categories over time as their priorities change.`,
       ].join("<br>"),
 
@@ -1008,12 +1000,12 @@ const calculateRecommendations = async (
       "What This Snapshot Doesn't Include (Yet)": [
         `This snapshot is built from the information you shared, but it doesn't capture everything that could shape your retirement over time.`,
         `Some important factors aren't included yet:`,
-        `Long-term care needs or insurance`,
-        `Major health changes or unexpected medical costs`,
-        `Changes in your ability or desire to work`,
-        `Divorce, remarriage, or significant inheritances`,
-        `Decisions involving home equity (downsizing, relocating, renting)`,
-        `Future changes to Social Security, tax rules, or other policies`,
+        `- Long-term care needs or insurance`,
+        `- Major health changes or unexpected medical costs`,
+        `- Changes in your ability or desire to work`,
+        `- Divorce, remarriage, or significant inheritances`,
+        `- Decisions involving home equity (downsizing, relocating, renting)`,
+        `- Future changes to Social Security, tax rules, or other policies`,
         `This doesn't mean your plan is incomplete—it means it's a starting point.`,
         `As you refine your goals and add more details, your roadmap can become more personalized, realistic, and useful.`,
       ].join("<br>"),
@@ -1065,7 +1057,7 @@ const calculateRetirementPaycheckVariables = (SS67, W67) => {
       "DEBUG - calculateRetirementPaycheckVariables - SS67:",
       SS67,
       "W67:",
-      W67
+      W67,
     );
 
     // RP = W67 + SS67 (Retirement Paycheck total)
@@ -1167,7 +1159,7 @@ const calculateStrengtheningVariables = async (
   userData,
   projectionData,
   retirementAge,
-  contributionData
+  contributionData,
 ) => {
   try {
     const { CONTRIB_15_DOLLARS, CONTRIB_20_DOLLARS } = contributionData;
@@ -1192,17 +1184,17 @@ const calculateStrengtheningVariables = async (
     return [
       `The options below show how different changes could extend how long your savings last.<br><br>`,
       `Each one stands on its own, and the impact will vary depending on which changes you choose and how they're combined.<br><br>`,
-      `1. Increase your monthly contribution to 15%-20% ($${CONTRIB_15_DOLLARS}–$${CONTRIB_20_DOLLARS}/mo): +${YEARS_15}-${YEARS_20} years.\n\n`,
+      `1. Increase your monthly contribution to 15%-20% ($${(CONTRIB_15_DOLLARS / 1000).toFixed(1)}K–$${(CONTRIB_20_DOLLARS / 1000).toFixed(1)}K/mo): <strong>+${YEARS_15}-${YEARS_20} years</strong>.<br><br>`,
       `A higher contribution rate compounds over time and meaningfully extends how long your balance lasts.<br><br>`,
-      `2. Delay collecting Social Security 1–3 years (start at age 68-70): +${YEARS_SS_DELAY_LOW}-${YEARS_SS_DELAY_HIGH} years.\n\n`,
+      `2. Delay collecting Social Security 1–3 years (start at age 68-70): <strong>+${YEARS_SS_DELAY_LOW}-${YEARS_SS_DELAY_HIGH} years</strong>.<br><br>`,
       `Delaying increases your monthly benefit by up to 24%, reducing the amount you need to withdraw each year.<br><br>`,
-      `3. Shift your transition away from full-time work by ${WORK_SHIFT_RANGE} years: +${YEARS_WORK_SHIFT_LOW}-${YEARS_WORK_SHIFT_HIGH} years.\n\n`,
+      `3. Shift your transition away from full-time work by ${WORK_SHIFT_RANGE} years: <strong>+${YEARS_WORK_SHIFT_LOW}-${YEARS_WORK_SHIFT_HIGH} years</strong>.<br><br>`,
       `Each additional working year adds income and shortens the withdrawal period, buying you more retirement time.<br><br>`,
-      `4. Improve your long-term growth rate to 7.5%–9%: +${YEARS_GROWTH_LOW}-${YEARS_GROWTH_HIGH} years.\n\n`,
+      `4. Improve your long-term growth rate to 7.5%–9%: <strong>+${YEARS_GROWTH_LOW}-${YEARS_GROWTH_HIGH} years</strong>.<br><br>`,
       `Higher long-term returns can significantly increase your peak savings and slow down future drawdowns.<br><br>`,
-      `5. Reduce long-term costs by ${COST_REDUCTION_TARGET}: +${YEARS_COST_REDUCTION_LOW}-${YEARS_COST_REDUCTION_HIGH} years.\n\n`,
+      `5. Reduce long-term costs by ${COST_REDUCTION_TARGET}: <strong>+${YEARS_COST_REDUCTION_LOW}-${YEARS_COST_REDUCTION_HIGH} years</strong>.<br><br>`,
       `Lower ongoing expenses decrease annual withdrawals and help your savings last longer.<br><br>`,
-      `6. Explore location flexibility: +${YEARS_LOCATION_LOW}-${YEARS_LOCATION_HIGH} years<br>`,
+      `6. Explore location flexibility: <strong>+${YEARS_LOCATION_LOW}-${YEARS_LOCATION_HIGH} years</strong><br>`,
       `Living in a lower-cost area reduces required withdrawals and stretches both Social Security and savings.<br><br>`,
       `You don't need to do everything—many people see meaningful improvements by focusing on just one or two changes that fit their life right now.`,
     ].join("");
