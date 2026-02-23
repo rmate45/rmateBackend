@@ -950,7 +950,7 @@ const calculateRecommendations = async (
         `A long-term growth rate of ${GROWTH_RATE}% shapes how quickly your balance builds and how long it lasts.`,
       ].join("<br>"),
 
-      // Your Retirement Paycheck - USING CORRECT CALCULATIONS
+      // Your Retirement Paycheck - WITH ALL UPDATES (Point 2, 2a, 2b, 2c)
       "Your Retirement Paycheck": [
         `Your Retirement Paycheck represents the core income you can plan around in retirement—estimated at $${Math.round(parseInt(paycheckVariables.RETIREMENT_PAYCHECK_LOW.replace(/,/g, "")) / 1000)}K–$${Math.round(parseInt(paycheckVariables.RETIREMENT_PAYCHECK_HIGH.replace(/,/g, "")) / 1000)}K per year.`,
         `This includes predictable, recurring sources of income that form the baseline for your day-to-day spending.`,
