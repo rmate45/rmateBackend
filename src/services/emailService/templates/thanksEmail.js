@@ -1,8 +1,8 @@
 const config = require("../../../config/env.config");
 
 const createThanksEmailParams = (userEmail) => {
-  const fromAddress = config.ses.fromEmail; // welcome@retiremate.com
-  const replyToAddress = config.ses.replyTo; // contact@retiremate.com
+  const fromAddress = config.ses.fromEmail;
+  const replyToAddress = config.ses.replyTo;
 
   const subject = "Thanks for exploring RetireMate";
 

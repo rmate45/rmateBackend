@@ -17,7 +17,7 @@ const sendThanksEmail = async (userEmail) => {
     const response = await sesClient.send(sendEmailCommand);
 
     console.log(
-      `✅ Thanks email sent to ${userEmail}. Message ID: ${response.MessageId}`,
+      `Thanks email sent to ${userEmail}. Message ID: ${response.MessageId}`,
     );
 
     return {
@@ -26,7 +26,7 @@ const sendThanksEmail = async (userEmail) => {
       email: userEmail,
     };
   } catch (error) {
-    console.error(`❌ Failed to send thanks email to ${userEmail}:`, error);
+    console.error(`Failed to send thanks email to ${userEmail}:`, error);
 
     // Handle specific SES errors
     if (error.name === "MessageRejected") {
@@ -46,7 +46,6 @@ const sendThanksEmail = async (userEmail) => {
       };
     }
 
-    // Re-throw for controller to handle
     throw error;
   }
 };
