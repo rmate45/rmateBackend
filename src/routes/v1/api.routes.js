@@ -6,7 +6,10 @@ const financialAdvisorController = require("../../controllers/financial.controll
 const chatController = require("../../controllers/chatController");
 const userController = require("../../controllers/userController");
 const projectionController = require("../../controllers/retirementProjectionController");
+const sendThanksEmailController = require("../../controllers/emailController");
 const { body } = require("express-validator");
+
+router.post("/send-thanks-email", sendThanksEmailController.sendThanksEmail);
 
 //questionnaire
 router.get("/get-prime-questions", questionnarieController.getPrimeQuestions);
@@ -19,29 +22,29 @@ router.post("/upload-file", manageQuestionnire.uploadFile);
 //financial advisors
 router.get(
   "/get-financial-advisors",
-  financialAdvisorController.getFinancialAdvisors
+  financialAdvisorController.getFinancialAdvisors,
 );
 router.post(
   "/upload-financial-advisor-file",
-  financialAdvisorController.uploadFinancialAdvisorFile
+  financialAdvisorController.uploadFinancialAdvisorFile,
 );
 router.post(
   "/upload-financial-reference",
-  financialAdvisorController.uploadFinancialReference
+  financialAdvisorController.uploadFinancialReference,
 );
 router.post(
   "/upload-saving-by-age",
-  financialAdvisorController.uploadSavingByAge
+  financialAdvisorController.uploadSavingByAge,
 );
 router.post(
   "/upload-survey-range-file",
-  financialAdvisorController.uploadSurveyRangeFile
+  financialAdvisorController.uploadSurveyRangeFile,
 );
 router.post("/upload-zipcodes", financialAdvisorController.uploadZipCodes);
 router.post("/upload-savings-at-67", financialAdvisorController.savingsAt67);
 router.post(
   "/calculate-results-level1",
-  financialAdvisorController.calculateResultsLevel1
+  financialAdvisorController.calculateResultsLevel1,
 );
 
 router.post(
@@ -50,7 +53,7 @@ router.post(
     body("userId").notEmpty().withMessage("userId is required"),
     body("message").notEmpty().withMessage("message is required"),
   ],
-  chatController.sendMessage
+  chatController.sendMessage,
 );
 
 router.post("/upload-statements", questionnarieController.uploadStatements);
@@ -60,55 +63,55 @@ router.get("/get-persona/:id", questionnarieController.getPersonaById);
 
 router.get(
   "/get-financial-plannings",
-  questionnarieController.getAllFinancialPlannings
+  questionnarieController.getAllFinancialPlannings,
 );
 router.get(
   "/get-financial-planning/:planningId",
-  questionnarieController.getFinancialPlanningById
+  questionnarieController.getFinancialPlanningById,
 );
 
 router.get(
   "/get-explore-questions",
-  questionnarieController.getAllExploreQuestions
+  questionnarieController.getAllExploreQuestions,
 );
 router.get(
   "/get-explore-question/:questionId",
-  questionnarieController.getExploreQuestionById
+  questionnarieController.getExploreQuestionById,
 );
 
 router.get("/get-roth-questions", questionnarieController.getAllRothQuestions);
 router.get(
   "/get-roth-question/:rothQuestionId",
-  questionnarieController.getRothQuestionById
+  questionnarieController.getRothQuestionById,
 );
 
 router.get(
   "/get-medicare-questions",
-  questionnarieController.getAllMedicareQuestions
+  questionnarieController.getAllMedicareQuestions,
 );
 router.get(
   "/get-medicare-question/:medicareQuestionId",
-  questionnarieController.getMedicareQuestionById
+  questionnarieController.getMedicareQuestionById,
 );
 
 router.get(
   "/get-asked-questions",
-  questionnarieController.getAllAskedQuestions
+  questionnarieController.getAllAskedQuestions,
 );
 
 router.get("/get-articles", questionnarieController.getAllArticles);
 router.get("/get-article/:id", questionnarieController.getArticleById);
 router.post(
   "/upload-intake-questions",
-  questionnarieController.uploadIntakeQuestions
+  questionnarieController.uploadIntakeQuestions,
 );
 router.get(
   "/get-intake-questions",
-  questionnarieController.getAllIntakeQuestions
+  questionnarieController.getAllIntakeQuestions,
 );
 router.get(
   "/get-intake-question/:questionId",
-  questionnarieController.getIntakeQuestion
+  questionnarieController.getIntakeQuestion,
 );
 
 router.get("/get-medi-questions", questionnarieController.getMedicareQuestions);
@@ -118,7 +121,7 @@ router.get("/user/:phoneNumber", userController.getUser);
 router.get("/user/:phoneNumber/profile", userController.getUserProfile);
 router.get(
   "/user/:phoneNumber/question/:questionId",
-  userController.getResponse
+  userController.getResponse,
 );
 router.get("/users", userController.getAllUsers);
 router.get("/user/:phoneNumber/plan/:planId", userController.getRetirementPlan);
@@ -128,18 +131,18 @@ router.get("/get-demographic/:id", userController.getUserDemographicById);
 
 router.post(
   "/calculate-saving-projection",
-  projectionController.calculateProjection
+  projectionController.calculateProjection,
 );
 
 router.post(
   "/upload-retirement-questions",
-  questionnarieController.uploadRetirementQuestions
+  questionnarieController.uploadRetirementQuestions,
 );
 
 // Get retirement questions with filters
 router.get(
   "/retirement-questions",
-  questionnarieController.getRetirementQuestions
+  questionnarieController.getRetirementQuestions,
 );
 
 // Get available age groups
