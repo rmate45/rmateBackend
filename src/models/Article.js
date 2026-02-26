@@ -61,3 +61,4 @@ articleSchema.index({ isPublished: 1 });
 articleSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("Article", articleSchema);
+
