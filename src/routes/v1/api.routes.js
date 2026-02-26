@@ -7,9 +7,28 @@ const chatController = require("../../controllers/chatController");
 const userController = require("../../controllers/userController");
 const projectionController = require("../../controllers/retirementProjectionController");
 const sendThanksEmailController = require("../../controllers/emailController");
+const sessionController = require("../../controllers/sessionController");
 const { body } = require("express-validator");
 
 router.post("/send-thanks-email", sendThanksEmailController.sendThanksEmail);
+
+// Start a new session
+router.post("/session/start", sessionController.startSession);
+
+// Save an answer
+router.post("/session/answer", sessionController.saveAnswer);
+
+// Get session details
+router.get("/session/:sessionId", sessionController.getSession);
+
+// Complete a session
+router.put("/session/complete", sessionController.completeSession);
+
+// Get session progress
+router.get(
+  "/session/progress/:sessionId",
+  sessionController.getSessionProgress,
+);
 
 //questionnaire
 router.get("/get-prime-questions", questionnarieController.getPrimeQuestions);
